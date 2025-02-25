@@ -1,7 +1,13 @@
-import * as React from "react";
-import type { GatsbyBrowser } from "gatsby";
-import { WrapRootElement } from "./src/provider";
+import React from 'react';
+import { ChakraProvider } from './src/components/ChakraProvider';
+import Layout from './src/components/Layout';
 
-export const wrapRootElement: GatsbyBrowser['wrapRootElement'] = ({ element }) => (
-   <WrapRootElement element={element} />
-)
+// Wrap all pages with the ChakraProvider
+export const wrapRootElement = ({ element }: { element: React.ReactNode }) => {
+  return <ChakraProvider>{element}</ChakraProvider>;
+};
+
+// Wrap all pages with the Layout component
+export const wrapPageElement = ({ element }: { element: React.ReactNode }) => {
+  return <Layout>{element}</Layout>;
+};

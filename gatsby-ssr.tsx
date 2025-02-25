@@ -1,18 +1,13 @@
-import * as React from "react";
-import type { GatsbySSR } from "gatsby";
-import { ColorModeScript } from "@chakra-ui/react";
-import { WrapRootElement } from "./src/provider";
-import { customTheme } from "./src/theme";
+import React from 'react';
+import { ChakraProvider } from './src/components/ChakraProvider';
+import Layout from './src/components/Layout';
 
-export const onRenderBody: GatsbySSR['onRenderBody'] = ({ setPreBodyComponents }) => {
-  setPreBodyComponents([
-    <ColorModeScript
-      initialColorMode={customTheme.config.initialColorMode}
-      key="chakra-ui-no-flash"
-    />,
-  ])
-}
+// Wrap all pages with the ChakraProvider
+export const wrapRootElement = ({ element }: { element: React.ReactNode }) => {
+  return <ChakraProvider>{element}</ChakraProvider>;
+};
 
-export const wrapRootElement: GatsbySSR['wrapRootElement'] = ({ element }) => (
-   <WrapRootElement element={element} />
-)
+// Wrap all pages with the Layout component
+export const wrapPageElement = ({ element }: { element: React.ReactNode }) => {
+  return <Layout>{element}</Layout>;
+};
