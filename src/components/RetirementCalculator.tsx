@@ -347,8 +347,7 @@ const RetirementCalculator = (): JSX.Element => {
               {colaAdjustment}%, and investment return {investmentReturn}%.
               Social Security at age 62 is {formatCurrency(ssMonthlyAt62)}, Full
               Retirement Age {formatCurrency(ssMonthlyAtFRA)}, and age 70{" "}
-              {formatCurrency(ssMonthlyAt70)}. You can change all of these
-              numbers at the bottom of the page.
+              {formatCurrency(ssMonthlyAt70)}. 
             </Alert>
           </CardFooter>
         </Card>
