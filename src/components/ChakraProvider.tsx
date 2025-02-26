@@ -4,7 +4,7 @@ import { ChakraProvider as ChakraUIProvider, extendTheme } from '@chakra-ui/reac
 // Extend the theme with Chakra UI v2 style
 const theme = extendTheme({
   config: {
-    initialColorMode: 'light',
+    initialColorMode: 'dark',
     useSystemColorMode: false,
   },
   fonts: {
