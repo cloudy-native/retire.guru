@@ -16,6 +16,7 @@ import {
   NumberInputField,
   NumberInputStepper,
   SimpleGrid,
+  Stack,
   Switch,
   Table,
   TableContainer,
@@ -30,6 +31,7 @@ import {
   Alert,
   AlertIcon,
   useColorModeValue,
+  Tooltip as ChakraTooltip,
 } from "@chakra-ui/react";
 import React, { useState } from "react";
 import {
