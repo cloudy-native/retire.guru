@@ -3,8 +3,6 @@ import React from "react";
 import Layout from "./components/Layout";
 import theme from "./theme";
 
-console.log(theme);
-
 // Wrap all pages with the ChakraProvider
 export const wrapRootElement = ({ element }: { element: React.ReactNode }) => {
   return (
