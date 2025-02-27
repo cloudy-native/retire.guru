@@ -4,14 +4,11 @@ import {
   Link,
   Stack,
   Text,
-  useColorMode,
-  useColorModeValue,
+  useColorModeValue
 } from "@chakra-ui/react";
-import React, { ReactNode } from "react";
+import React from "react";
 
 const Footer = (): JSX.Element => {
-  const { colorMode, toggleColorMode } = useColorMode();
-
   return (
     <Box
       as="footer"

@@ -27,6 +27,7 @@ import {
   CardFooter,
   Alert,
   AlertIcon,
+  useColorModeValue,
 } from "@chakra-ui/react";
 import React, { useState } from "react";
 import {
@@ -63,7 +64,7 @@ const RetirementCalculator = (): JSX.Element => {
   const [desiredMonthlyIncome, setDesiredMonthlyIncome] =
     useState<number>(3000);
   const [colaAdjustment, setColaAdjustment] = useState<number>(2.3);
-  const [investmentReturn, setInvestmentReturn] = useState<number>(7.9);
+  const [investmentReturn, setInvestmentReturn] = useState<number>(8);
   const [selectedScenario, setSelectedScenario] = useState("62");
   const [ssMonthlyAt62, setSsMonthlyAt62] = useState(2572);
   const [ssMonthlyAtFRA, setSsMonthlyAtFRA] = useState(3627);
@@ -243,8 +244,13 @@ const RetirementCalculator = (): JSX.Element => {
 
   return (
     <>
-      <VStack width="100%" align="stretch" spacing={8}>
-        <Card>
+      <VStack width="100%" align="stretch" spacing={8} py={4}>
+        <Card
+          bgColor={useColorModeValue("blue.50", "blue.900")}
+          boxShadow="lg"
+          borderColor={useColorModeValue("blue.100", "blue.800")}
+          borderWidth="1px"
+        >
           <CardHeader>
             <Heading size={"lg"}>Your Money</Heading>
             <Text>
@@ -291,7 +297,13 @@ const RetirementCalculator = (): JSX.Element => {
             </SimpleGrid>
           </CardBody>
         </Card>
-        <Card>
+
+        <Card
+          bgColor={useColorModeValue("green.50", "green.900")}
+          boxShadow="lg"
+          borderColor={useColorModeValue("green.100", "green.800")}
+          borderWidth="1px"
+        >
           <CardHeader>
             <Heading size={"lg"}>Balance Projection</Heading>
             <Text>
@@ -299,6 +311,17 @@ const RetirementCalculator = (): JSX.Element => {
               get older. We calculate three key scenarios: Age 62, 66 and 10
               months (FRA), and 70. Your savings grow, but you're withdrawing
               some to maintain your monthly goals.
+            </Text>
+            <br />
+            <Text>
+              Here's how to read it. The chart shows your balance at the end of
+              each year for all three age scenarios for claiming Social
+              Security. Find which line is yours based on when you claimed
+              Social Security, or plan to. Try adjusting your financial picture
+              above and watch the graphs change with it. As you increase your
+              aspirations for monthly income, the lines slope down. When the
+              lines touch the x-axis, your savings are gone. Time to dial it
+              back a bit.
             </Text>
           </CardHeader>
           <CardBody>
@@ -347,11 +370,17 @@ const RetirementCalculator = (): JSX.Element => {
               {colaAdjustment}%, and investment return {investmentReturn}%.
               Social Security at age 62 is {formatCurrency(ssMonthlyAt62)}, Full
               Retirement Age {formatCurrency(ssMonthlyAtFRA)}, and age 70{" "}
-              {formatCurrency(ssMonthlyAt70)}. 
+              {formatCurrency(ssMonthlyAt70)}.
             </Alert>
           </CardFooter>
         </Card>
-        <Card>
+
+        <Card
+          bgColor={useColorModeValue("purple.50", "purple.900")}
+          boxShadow="lg"
+          borderColor={useColorModeValue("purple.100", "purple.800")}
+          borderWidth="1px"
+        >
           <CardHeader>
             <Heading size={"lg"}>Detailed Year-by-Year Projection</Heading>
             <Text>
@@ -363,58 +392,71 @@ const RetirementCalculator = (): JSX.Element => {
             </Text>
           </CardHeader>
           <CardBody>
-            <ButtonGroup size="md" isAttached variant="outline">
-              <Button
-                {...getScenarioButtonStyles("62")}
-                onClick={() => handleScenarioClick("62")}
-              >
-                62
-              </Button>
-              <Button
-                {...getScenarioButtonStyles("FRA")}
-                onClick={() => handleScenarioClick("FRA")}
-              >
-                FRA
-              </Button>
-              <Button
-                {...getScenarioButtonStyles("70")}
-                onClick={() => handleScenarioClick("70")}
-              >
-                70
-              </Button>
-            </ButtonGroup>
+            <VStack spacing={4}>
+              <ButtonGroup size="md" isAttached variant="outline">
+                <Button
+                  {...getScenarioButtonStyles("62")}
+                  onClick={() => handleScenarioClick("62")}
+                >
+                  62
+                </Button>
+                <Button
+                  {...getScenarioButtonStyles("FRA")}
+                  onClick={() => handleScenarioClick("FRA")}
+                >
+                  FRA
+                </Button>
+                <Button
+                  {...getScenarioButtonStyles("70")}
+                  onClick={() => handleScenarioClick("70")}
+                >
+                  70
+                </Button>
+              </ButtonGroup>
 
-            <TableContainer>
-              <Table>
-                <Thead>
-                  <Tr>
-                    <Th>Year</Th>
-                    <Th>SS Monthly</Th>
-                    <Th>401(k) Monthly Withdrawal</Th>
-                    <Th>Total Monthly Income</Th>
-                    <Th>401(k) Balance</Th>
-                    <Th>Withdrawal Rate</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  {getScenario(selectedScenario)
-                    .slice(0, 30)
-                    .map((row, index) => (
-                      <Tr key={index}>
-                        <Td>{row.year}</Td>
-                        <Td>{formatCurrency(row.ssMonthly)}</Td>
-                        <Td>{formatCurrency(row.requiredFrom401kMonthly)}</Td>
-                        <Td>{formatCurrency(row.totalMonthlyIncome)}</Td>
-                        <Td>{formatCurrency(row.endingBalance)}</Td>
-                        <Td>{row.withdrawalRate}%</Td>
-                      </Tr>
-                    ))}
-                </Tbody>
-              </Table>
-            </TableContainer>
+              <TableContainer>
+                <Table>
+                  <Thead>
+                    <Tr>
+                      <Th>Year</Th>
+                      <Th>SS Monthly</Th>
+                      <Th>401(k) Monthly Withdrawal</Th>
+                      <Th>Total Monthly Income</Th>
+                      <Th>401(k) Balance</Th>
+                      <Th>Withdrawal Rate</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {getScenario(selectedScenario)
+                      .slice(0, 30)
+                      .map((row, index) => (
+                        <Tr key={index}>
+                          <Td isNumeric>{row.year}</Td>
+                          <Td isNumeric>{formatCurrency(row.ssMonthly)}</Td>
+                          <Td isNumeric>
+                            {formatCurrency(row.requiredFrom401kMonthly)}
+                          </Td>
+                          <Td isNumeric>
+                            {formatCurrency(row.totalMonthlyIncome)}
+                          </Td>
+                          <Td isNumeric>{formatCurrency(row.endingBalance)}</Td>
+                          <Td isNumeric>{row.withdrawalRate}%</Td>
+                        </Tr>
+                      ))}
+                  </Tbody>
+                </Table>
+              </TableContainer>
+            </VStack>
           </CardBody>
         </Card>
-        <Card>
+
+        <Card
+          colorScheme=""
+          bgColor={useColorModeValue("yellow.50", "yellow.900")}
+          boxShadow="lg"
+          borderColor={useColorModeValue("yellow.100", "yellow.800")}
+          borderWidth="1px"
+        >
           <CardHeader>
             <Heading size={"lg"}>The Economy</Heading>
             <Text>
@@ -429,7 +471,7 @@ const RetirementCalculator = (): JSX.Element => {
               performance averages 10.3%. A more conservative portfolio of bonds
               averages from 4.2% to 4.7%. Common guidance suggests a portfolio
               of 60% stocks and 40% bonds. That would be 60% × 10.3% (stocks) +
-              40% × 4.5% (bonds) = 7.9% average annual return.
+              40% × 4.5% (bonds) = 8% average annual return.
             </Text>
           </CardHeader>
 
@@ -490,10 +532,24 @@ const RetirementCalculator = (): JSX.Element => {
             </SimpleGrid>
           </CardBody>
         </Card>
-        <Card>
+
+        <Card
+          bgColor={useColorModeValue("pink.50", "pink.900")}
+          boxShadow="lg"
+          borderColor={useColorModeValue("pink.100", "pink.800")}
+          borderWidth="1px"
+        >
           <CardHeader>
             <Heading size={"lg"}>Social Security</Heading>
             <Text>Adjust the current Social Security limits as necessary.</Text>
+            <br />
+            <Alert status="info">
+              <AlertIcon />
+              Try setting, say, the FRA number to your specific Social Security
+              payment amount. Then look at the FRA line in the graph, and switch
+              the table view to FRA too. That will tailor all calculations
+              specific to you.
+            </Alert>
           </CardHeader>
 
           <CardBody>
@@ -539,7 +595,7 @@ const RetirementCalculator = (): JSX.Element => {
               </FormControl>
             </SimpleGrid>
           </CardBody>
-        </Card>{" "}
+        </Card>
       </VStack>
     </>
   );
