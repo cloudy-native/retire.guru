@@ -139,8 +139,8 @@ const Footer = () => {
           <Stack align={"flex-start"}>
             <ListHeader>Support Me</ListHeader>
             <Text>
-              If you like this and want to help a little bit, you can send small
-              donation.
+              If you like this and want to help a little bit, you can send a
+              small donation.
             </Text>
             <BuyMeCoffeeButton />
           </Stack>

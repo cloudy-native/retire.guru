@@ -1,23 +1,20 @@
 import {
+  Accordion,
+  AccordionButton,
+  AccordionIcon,
+  AccordionItem,
+  AccordionPanel,
+  Alert,
+  AlertIcon,
   Box,
-  BoxProps,
-  Button,
-  ButtonGroup,
   Card,
   CardBody,
+  CardFooter,
   CardHeader,
+  Tooltip as ChakraTooltip,
   Flex,
-  FormControl,
-  FormHelperText,
   Heading,
-  NumberDecrementStepper,
-  NumberIncrementStepper,
-  NumberInput,
-  NumberInputField,
-  NumberInputStepper,
   SimpleGrid,
-  Stack,
-  Switch,
   Table,
   TableContainer,
   Tbody,
@@ -25,13 +22,9 @@ import {
   Text,
   Th,
   Thead,
-  VStack,
   Tr,
-  CardFooter,
-  Alert,
-  AlertIcon,
   useColorModeValue,
-  Tooltip as ChakraTooltip,
+  VStack,
 } from "@chakra-ui/react";
 import React, { useState } from "react";
 import {
@@ -44,129 +37,45 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-
-// ======== Types and Interfaces ========
-interface ChartContainerProps extends BoxProps {
-  children: React.ReactNode;
-  height?: number;
-}
-
-interface ScenarioRow {
-  year: number;
-  ssMonthly: number;
-  requiredFrom401kMonthly: number;
-  totalMonthlyIncome: number;
-  startingBalance: number;
-  yearlyReturn: number;
-  endingBalance: number;
-  withdrawalRate: string;
-}
-
-type ScenarioOption = "62" | "FRA" | "70";
-
-interface ChartData {
-  year: number;
-  "SS at 62": number;
-  "SS at FRA": number;
-  "SS at 70": number;
-}
-
-interface FinancialParams {
-  inflationRatePercent: number;
-  initialBalance: number;
-  desiredMonthlyIncome: number;
-  colaAdjustment: number;
-  investmentReturn: number;
-  ssMonthlyAt62: number;
-  ssMonthlyAtFRA: number;
-  ssMonthlyAt70: number;
-}
-
-interface FormNumberInputProps {
-  value: number;
-  onChange: (valueAsString: string, valueAsNumber: number) => void;
-  helperText: string;
-  placeholder?: string;
-  min?: number;
-  max?: number;
-  step?: number;
-}
-
-// ======== Utility Functions ========
-const formatCurrency = (value: number): string => {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(value);
-};
-
-// ======== Component: ChartContainer ========
-const ChartContainer: React.FC<ChartContainerProps> = ({
-  children,
-  height = 300,
-  ...boxProps
-}) => {
-  return (
-    <Box height={`${height}px`} width="100%" {...boxProps}>
-      {children}
-    </Box>
-  );
-};
-
-// ======== Component: FormNumberInput ========
-const FormNumberInput: React.FC<FormNumberInputProps> = ({
-  value,
-  onChange,
-  helperText,
-  placeholder,
-  min,
-  max,
-  step,
-}) => {
-  const handleChange = (valueAsString: string, valueAsNumber: number) => {
-    // If the field is empty, pass the empty string and prevent NaN
-    if (valueAsString === "") {
-      onChange(valueAsString, 0);
-    } else {
-      onChange(valueAsString, valueAsNumber);
-    }
-  };
-
-  return (
-    <FormControl>
-      <NumberInput 
-        value={value || ""} 
-        onChange={handleChange} 
-        min={min} 
-        max={max} 
-        step={step}
-        keepWithinRange={true}
-        clampValueOnBlur={true}
-      >
-        <NumberInputField placeholder={placeholder} />
-        <NumberInputStepper>
-          <NumberIncrementStepper />
-          <NumberDecrementStepper />
-        </NumberInputStepper>
-      </NumberInput>
-      <FormHelperText>{helperText}</FormHelperText>
-    </FormControl>
-  );
-};
+import {
+  ChartContainer,
+  FormNumberInput,
+  ScenarioRow,
+  ChartData,
+  FinancialParams,
+  formatCurrency,
+  formatLargeCurrency,
+  calculateScenario,
+  prepareChartData,
+  updateFinancialParam
+} from "../utils";
 
 // ======== Component: MoneyInputCard ========
 interface MoneyInputCardProps {
   initialBalance: number;
   desiredMonthlyIncome: number;
-  onChangeInitialBalance: (valueAsString: string, valueAsNumber: number) => void;
-  onChangeDesiredMonthlyIncome: (valueAsString: string, valueAsNumber: number) => void;
+  socialSecurity: number;
+  onChangeInitialBalance: (
+    valueAsString: string,
+    valueAsNumber: number
+  ) => void;
+  onChangeDesiredMonthlyIncome: (
+    valueAsString: string,
+    valueAsNumber: number
+  ) => void;
+  onChangeSocialSecurity: (
+    valueAsString: string,
+    valueAsNumber: number
+  ) => void;
 }
 
 const MoneyInputCard: React.FC<MoneyInputCardProps> = ({
   initialBalance,
   desiredMonthlyIncome,
+  socialSecurity,
   onChangeInitialBalance,
   onChangeDesiredMonthlyIncome,
+  onChangeSocialSecurity,
 }) => {
   return (
     <Card
@@ -176,11 +85,8 @@ const MoneyInputCard: React.FC<MoneyInputCardProps> = ({
       borderWidth="1px"
     >
       <CardHeader>
-        <Heading size={"lg"}>Your Money</Heading>
-        <Text>
-          Start by telling us your savings and how much per month you think
-          you will need in retirement.
-        </Text>
+        <Heading size={"lg"}>Your Financials</Heading>
+        <Text>Enter your retirement details to see projections.</Text>
       </CardHeader>
 
       <CardBody>
@@ -189,17 +95,163 @@ const MoneyInputCard: React.FC<MoneyInputCardProps> = ({
             value={initialBalance}
             onChange={onChangeInitialBalance}
             placeholder="Enter starting balance..."
-            helperText="Starting retirement savings, increments of $10,000"
+            helperText="Current 401(k) or retirement savings balance"
             step={10000}
+          />
+
+          <FormNumberInput
+            value={socialSecurity}
+            onChange={onChangeSocialSecurity}
+            placeholder="Enter Social Security..."
+            helperText="Your expected monthly Social Security benefit"
+            step={1}
           />
 
           <FormNumberInput
             value={desiredMonthlyIncome}
             onChange={onChangeDesiredMonthlyIncome}
-            placeholder="Enter monthly income..."
-            helperText="Monthly income goal, increments of $100"
+            placeholder="Enter total monthly income..."
+            helperText="Total monthly income needed in retirement"
             step={100}
           />
+        </SimpleGrid>
+      </CardBody>
+    </Card>
+  );
+};
+
+// ======== Component: WithdrawalPreviewCard ========
+interface WithdrawalPreviewCardProps {
+  scenarioData: ScenarioRow[];
+  currentYear: number;
+}
+
+const WithdrawalPreviewCard: React.FC<WithdrawalPreviewCardProps> = ({
+  scenarioData,
+  currentYear,
+}) => {
+  const previewYears = [0, 1, 4, 9]; // Years 1, 2, 5, 10 (index 0-based)
+
+  return (
+    <Card
+      bgColor={useColorModeValue("teal.50", "teal.950")}
+      boxShadow="lg"
+      borderColor={useColorModeValue("teal.100", "teal.900")}
+      borderWidth="1px"
+    >
+      <CardHeader>
+        <Heading size={"lg"}>Income Preview</Heading>
+        <Text mb={2}>Your projected income for key retirement years.</Text>
+        <Text fontSize="sm" color={useColorModeValue("gray.600", "gray.400")}>
+          Social Security increases with COLA each year • Monthly goal rises
+          with inflation • 401(k) withdrawal is the difference • Balance grows
+          with investment returns •{" "}
+          <Box as="span" fontWeight="medium">
+            ⚠️ Warning appears when withdrawal rate exceeds 4% rule
+          </Box>
+        </Text>
+      </CardHeader>
+
+      <CardBody>
+        <SimpleGrid columns={{ base: 1, sm: 2, md: 4 }} spacing={4}>
+          {previewYears.map((yearIndex) => {
+            // Check if we have data for this year
+            if (yearIndex < scenarioData.length) {
+              const data = scenarioData[yearIndex];
+              const yearNumber = yearIndex + 1; // Convert to 1-based for display
+
+              return (
+                <Box
+                  key={yearIndex}
+                  p={4}
+                  borderWidth="1px"
+                  borderRadius="lg"
+                  borderColor={useColorModeValue("teal.200", "teal.800")}
+                  bgColor={useColorModeValue("white", "gray.800")}
+                >
+                  <Heading size="md" mb={3}>
+                    Year {yearNumber} ({currentYear + yearIndex})
+                  </Heading>
+                  <VStack align="start" spacing={2} width="100%">
+                    <Box width="100%">
+                      <Text fontWeight="bold">Monthly Goal:</Text>
+                      <Text fontSize="lg">
+                        {formatCurrency(data.totalMonthlyIncome)}
+                      </Text>
+                    </Box>
+                    <Box width="100%">
+                      <Text fontWeight="bold">Social Security:</Text>
+                      <Text fontSize="lg">
+                        {formatCurrency(data.ssMonthly)}
+                      </Text>
+                    </Box>
+                    <Box width="100%">
+                      <Text fontWeight="bold">401(k) Withdrawal:</Text>
+                      <Flex alignItems="center">
+                        <VStack align="flex-start" spacing={0}>
+                          <Text fontSize="lg">
+                            {formatCurrency(data.requiredFrom401kMonthly)}
+                          </Text>
+                          <Text
+                            fontSize="xs"
+                            color={
+                              parseFloat(data.withdrawalRate) > 4
+                                ? "orange.500"
+                                : "gray.500"
+                            }
+                          >
+                            {data.withdrawalRate}% withdrawal rate
+                          </Text>
+                        </VStack>
+                        {parseFloat(data.withdrawalRate) > 4 && (
+                          <ChakraTooltip
+                            label={`This withdrawal rate (${data.withdrawalRate}%) is higher than the recommended 4% safe withdrawal rate.`}
+                            placement="top"
+                          >
+                            <Box
+                              as="span"
+                              color="orange.500"
+                              ml={2}
+                              fontSize="lg"
+                            >
+                              ⚠️
+                            </Box>
+                          </ChakraTooltip>
+                        )}
+                      </Flex>
+                    </Box>
+                    <Box width="100%">
+                      <Text fontWeight="bold">401(k) Balance:</Text>
+                      <Text fontSize="lg">
+                        {formatLargeCurrency(data.endingBalance)}
+                      </Text>
+                    </Box>
+                  </VStack>
+                </Box>
+              );
+            }
+
+            // If no data for this year (funds depleted), show empty state
+            return (
+              <Box
+                key={yearIndex}
+                p={4}
+                borderWidth="1px"
+                borderRadius="lg"
+                borderColor={useColorModeValue("red.200", "red.800")}
+                bgColor={useColorModeValue("white", "gray.800")}
+              >
+                <Heading size="md" mb={3}>
+                  Year {yearIndex + 1} ({currentYear + yearIndex})
+                </Heading>
+                <Box width="100%">
+                  <Text color="red.500" fontSize="lg">
+                    Retirement funds depleted
+                  </Text>
+                </Box>
+              </Box>
+            );
+          })}
         </SimpleGrid>
       </CardBody>
     </Card>
@@ -212,11 +264,7 @@ interface BalanceProjectionCardProps {
   inflationRatePercent: number;
   colaAdjustment: number;
   investmentReturn: number;
-  ssMonthlyAt62: number;
-  ssMonthlyAtFRA: number;
-  ssMonthlyAt70: number;
-  selectedScenario: ScenarioOption;
-  onScenarioClick: (option: ScenarioOption) => void;
+  socialSecurity: number;
 }
 
 const BalanceProjectionCard: React.FC<BalanceProjectionCardProps> = ({
@@ -224,26 +272,8 @@ const BalanceProjectionCard: React.FC<BalanceProjectionCardProps> = ({
   inflationRatePercent,
   colaAdjustment,
   investmentReturn,
-  ssMonthlyAt62,
-  ssMonthlyAtFRA,
-  ssMonthlyAt70,
-  selectedScenario,
-  onScenarioClick,
+  socialSecurity,
 }) => {
-  const [showAllScenarios, setShowAllScenarios] = useState(true);
-  
-  const getScenarioButtonStyles = (option: ScenarioOption) => {
-    const isActive = selectedScenario === option;
-
-    return {
-      colorScheme: isActive ? "blue" : "gray",
-      variant: isActive ? "solid" : "outline",
-      opacity: isActive ? 1 : 0.6,
-      _hover: {
-        opacity: isActive ? 1 : 0.8,
-      },
-    };
-  };
   return (
     <Card
       bgColor={useColorModeValue("green.50", "green.950")}
@@ -252,59 +282,14 @@ const BalanceProjectionCard: React.FC<BalanceProjectionCardProps> = ({
       borderWidth="1px"
     >
       <CardHeader>
-        <Heading size={"lg"}>Balance Projection</Heading>
+        <Heading size={"lg"}>Savings Projection</Heading>
         <Text>
-          Given your financial goals, here's how your nest egg looks as you
-          get older. We calculate three key scenarios: Age 62, 66 and 10
-          months (FRA), and 70. Your savings grow, but you're withdrawing
-          some to maintain your monthly goals.
-        </Text>
-        <br />
-        <Text>
-          Here's how to read it. The chart shows your balance at the end of
-          each year for all three age scenarios for claiming Social
-          Security. Find which line is yours based on when you claimed
-          Social Security, or plan to. Try adjusting your financial picture
-          above and watch the graphs change with it. As you increase your
-          aspirations for monthly income, the lines slope down. When the
-          lines touch the x-axis, your savings are gone. Time to dial it
-          back a bit.
+          This chart shows your 401(k) balance over time. Adjust your inputs to
+          see how they affect your long-term savings.
         </Text>
       </CardHeader>
       <CardBody>
         <VStack spacing={4} align="stretch">
-          <Flex direction="column" align="flex-start" gap={2}>
-            <ButtonGroup size="sm" isAttached variant="outline">
-              <Button
-                {...getScenarioButtonStyles("62")}
-                onClick={() => onScenarioClick("62")}
-              >
-                Age 62
-              </Button>
-              <Button
-                {...getScenarioButtonStyles("FRA")}
-                onClick={() => onScenarioClick("FRA")}
-              >
-                FRA
-              </Button>
-              <Button
-                {...getScenarioButtonStyles("70")}
-                onClick={() => onScenarioClick("70")}
-              >
-                Age 70
-              </Button>
-            </ButtonGroup>
-            
-            <FormControl display="flex" alignItems="center" width="auto">
-              <FormHelperText mr={2} mb={0}>Show all scenarios</FormHelperText>
-              <Switch 
-                isChecked={showAllScenarios}
-                onChange={() => setShowAllScenarios(!showAllScenarios)}
-                colorScheme="green"
-              />
-            </FormControl>
-          </Flex>
-          
           <ChartContainer>
             <ResponsiveContainer width="100%" height="100%">
               <LineChart
@@ -327,85 +312,75 @@ const BalanceProjectionCard: React.FC<BalanceProjectionCardProps> = ({
                     position: "insideLeft",
                   }}
                 />
-                <Tooltip 
+                <Tooltip
                   content={({ active, payload, label }) => {
                     if (active && payload && payload.length) {
                       const colorMode = useColorModeValue("light", "dark");
                       const tooltipStyles = {
-                        backgroundColor: colorMode === "dark" ? "#1A202C" : "#FFFFFF",
+                        backgroundColor:
+                          colorMode === "dark" ? "#1A202C" : "#FFFFFF",
                         border: `1px solid ${colorMode === "dark" ? "#2D3748" : "#E2E8F0"}`,
                         color: colorMode === "dark" ? "#FFFFFF" : "#1A202C",
                         padding: "10px",
                         borderRadius: "4px",
-                        boxShadow: "0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)",
+                        boxShadow:
+                          "0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)",
                       };
-                      
-                      // Only show the relevant payload items based on selected scenarios
-                      const filteredPayload = showAllScenarios 
-                        ? payload 
-                        : payload.filter(p => p.name === `SS at ${selectedScenario}`);
-                      
+
                       return (
                         <div style={tooltipStyles}>
-                          <p style={{ fontWeight: "bold", marginBottom: "5px" }}>Year: {label}</p>
-                          {filteredPayload.map((entry, index) => (
-                            <p key={index} style={{ color: entry.color, margin: "2px 0" }}>
-                              <span style={{ fontWeight: 600 }}>{entry.name}:</span> {formatCurrency(entry.value as number)}
+                          <p
+                            style={{ fontWeight: "bold", marginBottom: "5px" }}
+                          >
+                            Year: {label}
+                          </p>
+                          {payload.map((entry, index) => (
+                            <p
+                              key={index}
+                              style={{ color: entry.color, margin: "2px 0" }}
+                            >
+                              <span style={{ fontWeight: 600 }}>
+                                {entry.name}:
+                              </span>{" "}
+                              {formatCurrency(entry.value as number)}
                             </p>
                           ))}
-                          <p style={{ fontSize: "0.8em", marginTop: "5px", opacity: 0.8 }}>
-                            {filteredPayload[0]?.value > 0 
-                              ? "Retirement savings balance at year end" 
+                          <p
+                            style={{
+                              fontSize: "0.8em",
+                              marginTop: "5px",
+                              opacity: 0.8,
+                            }}
+                          >
+                            {payload[0]?.value > 0
+                              ? "Retirement savings balance at year end"
                               : "Retirement savings depleted"}
                           </p>
                         </div>
                       );
                     }
-                    
+
                     return null;
                   }}
                 />
                 <Legend />
-                {(showAllScenarios || selectedScenario === "62") && (
-                  <Line 
-                    dataKey="SS at 62" 
-                    stroke="#82ca9d" 
-                    strokeWidth={selectedScenario === "62" ? 3 : 2}
-                    dot={selectedScenario === "62" ? { r: 3 } : false}
-                  />
-                )}
-                {(showAllScenarios || selectedScenario === "FRA") && (
-                  <Line
-                    dataKey="SS at FRA"
-                    stroke="#8884d8"
-                    strokeWidth={selectedScenario === "FRA" ? 3 : 2}
-                    activeDot={selectedScenario === "FRA" ? { r: 8 } : { r: 6 }}
-                    dot={selectedScenario === "FRA" ? { r: 3 } : false}
-                  />
-                )}
-                {(showAllScenarios || selectedScenario === "70") && (
-                  <Line 
-                    dataKey="SS at 70" 
-                    stroke="#ff7300" 
-                    strokeWidth={selectedScenario === "70" ? 3 : 2}
-                    dot={selectedScenario === "70" ? { r: 3 } : false}
-                  />
-                )}
+                <Line
+                  dataKey="Balance"
+                  stroke="#8884d8"
+                  strokeWidth={3}
+                  dot={{ r: 3 }}
+                />
               </LineChart>
             </ResponsiveContainer>
           </ChartContainer>
         </VStack>
       </CardBody>
       <CardFooter>
-        <Alert status="info">
+        <Alert status="info" fontSize="sm">
           <AlertIcon />
-          You can change the economic assumptions that went into calculating
-          this at the bottom of the page. For this chart, the rate of
-          inflation is {inflationRatePercent}%, COLA increase{" "}
-          {colaAdjustment}%, and investment return {investmentReturn}%.
-          Social Security at age 62 is {formatCurrency(ssMonthlyAt62)}, Full
-          Retirement Age {formatCurrency(ssMonthlyAtFRA)}, and age 70{" "}
-          {formatCurrency(ssMonthlyAt70)}.
+          Assumptions: Inflation {inflationRatePercent}%, COLA {colaAdjustment}
+          %, Investment return {investmentReturn}%, Social Security{" "}
+          {formatCurrency(socialSecurity)}/month
         </Alert>
       </CardFooter>
     </Card>
@@ -414,130 +389,67 @@ const BalanceProjectionCard: React.FC<BalanceProjectionCardProps> = ({
 
 // ======== Component: DetailedProjectionCard ========
 interface DetailedProjectionCardProps {
-  selectedScenario: ScenarioOption;
   scenarioData: ScenarioRow[];
-  onScenarioClick: (option: ScenarioOption) => void;
 }
 
 const DetailedProjectionCard: React.FC<DetailedProjectionCardProps> = ({
-  selectedScenario,
   scenarioData,
-  onScenarioClick,
 }) => {
-  const getScenarioButtonStyles = (option: ScenarioOption) => {
-    const isActive = selectedScenario === option;
-
-    return {
-      colorScheme: isActive ? "blue" : "gray",
-      variant: isActive ? "solid" : "outline",
-      opacity: isActive ? 1 : 0.6,
-      _hover: {
-        opacity: isActive ? 1 : 0.8,
-      },
-    };
-  };
-
   return (
-    <Card
-      bgColor={useColorModeValue("purple.50", "purple.950")}
-      boxShadow="lg"
-      borderColor={useColorModeValue("purple.100", "purple.900")}
-      borderWidth="1px"
-    >
-      <CardHeader>
-        <Heading size={"lg"}>Detailed Year-by-Year Projection</Heading>
-        <Text>
-          Here's how it all looks. If your monthly goals are completely
-          covered by Social Security then your withdraw rate can go
-          negative, which means you have money left over each month to
-          invest back in your 401(k) or other tax-deferred account. Lucky
-          you!
-        </Text>
-      </CardHeader>
-      <CardBody>
-        <VStack spacing={4} align="stretch">
-          <Flex justify="flex-start" align="center" mb={2}>
-            <ButtonGroup size="sm" isAttached variant="outline">
-              <Button
-                {...getScenarioButtonStyles("62")}
-                onClick={() => onScenarioClick("62")}
-              >
-                Age 62
-              </Button>
-              <Button
-                {...getScenarioButtonStyles("FRA")}
-                onClick={() => onScenarioClick("FRA")}
-              >
-                FRA
-              </Button>
-              <Button
-                {...getScenarioButtonStyles("70")}
-                onClick={() => onScenarioClick("70")}
-              >
-                Age 70
-              </Button>
-            </ButtonGroup>
-          </Flex>
+    <Box px={4}>
+      <Text mb={2} fontSize="sm">
+        All income figures are monthly. A negative withdrawal rate means you're
+        adding to savings.
+      </Text>
 
-          <TableContainer>
-            <Table>
-              <Thead>
-                <Tr>
-                  <Th>Year</Th>
-                  <Th>SS Monthly</Th>
-                  <Th>401(k) Monthly Withdrawal</Th>
-                  <Th>Total Monthly Income</Th>
-                  <Th>401(k) Balance</Th>
-                  <Th>Withdrawal Rate</Th>
-                </Tr>
-              </Thead>
-              <Tbody>
-                {scenarioData
-                  .slice(0, 30)
-                  .map((row, index) => (
-                    <Tr key={index}>
-                      <Td isNumeric>{row.year}</Td>
-                      <Td isNumeric>{formatCurrency(row.ssMonthly)}</Td>
-                      <Td isNumeric>
-                        {formatCurrency(row.requiredFrom401kMonthly)}
-                      </Td>
-                      <Td isNumeric>
-                        {formatCurrency(row.totalMonthlyIncome)}
-                      </Td>
-                      <Td isNumeric>{formatCurrency(row.endingBalance)}</Td>
-                      <Td isNumeric>
-                        <Box 
-                          as="span" 
-                          position="relative"
-                          _hover={{
-                            textDecoration: "underline",
-                            cursor: "help"
-                          }}
-                          title={`This is the percentage of your 401(k) balance you're withdrawing annually. Financial advisors often suggest keeping this below 4% for sustainability.${
-                            parseFloat(row.withdrawalRate) > 4 ? " Your withdrawal rate is higher than recommended." : ""
-                          }`}
-                        >
-                          {row.withdrawalRate}%
-                          {parseFloat(row.withdrawalRate) > 4 && (
-                            <Box 
-                              as="span" 
-                              color="orange.500" 
-                              ml={1}
-                              fontSize="sm"
-                            >
-                              ⚠️
-                            </Box>
-                          )}
+      <TableContainer>
+        <Table size="sm">
+          <Thead>
+            <Tr>
+              <Th>Year</Th>
+              <Th isNumeric>Social Security</Th>
+              <Th isNumeric>401(k) Draw</Th>
+              <Th isNumeric>Total</Th>
+              <Th isNumeric>Balance</Th>
+              <Th isNumeric>Rate</Th>
+            </Tr>
+          </Thead>
+          <Tbody>
+            {scenarioData.slice(0, 30).map((row, index) => (
+              <Tr key={index}>
+                <Td isNumeric>{row.year}</Td>
+                <Td isNumeric>{formatCurrency(row.ssMonthly)}</Td>
+                <Td isNumeric>{formatCurrency(row.requiredFrom401kMonthly)}</Td>
+                <Td isNumeric>{formatCurrency(row.totalMonthlyIncome)}</Td>
+                <Td isNumeric>{formatCurrency(row.endingBalance)}</Td>
+                <Td isNumeric>
+                  <ChakraTooltip
+                    label={`This withdrawal rate (${row.withdrawalRate}%) is ${parseFloat(row.withdrawalRate) <= 4 ? "within" : "higher than"} the recommended 4% safe withdrawal rate.`}
+                    placement="top"
+                  >
+                    <Box
+                      as="span"
+                      position="relative"
+                      _hover={{
+                        textDecoration: "underline",
+                        cursor: "help",
+                      }}
+                    >
+                      {row.withdrawalRate}%
+                      {parseFloat(row.withdrawalRate) > 4 && (
+                        <Box as="span" color="orange.500" ml={1} fontSize="sm">
+                          ⚠️
                         </Box>
-                      </Td>
-                    </Tr>
-                  ))}
-              </Tbody>
-            </Table>
-          </TableContainer>
-        </VStack>
-      </CardBody>
-    </Card>
+                      )}
+                    </Box>
+                  </ChakraTooltip>
+                </Td>
+              </Tr>
+            ))}
+          </Tbody>
+        </Table>
+      </TableContainer>
+    </Box>
   );
 };
 
@@ -546,9 +458,18 @@ interface EconomyInputCardProps {
   inflationRatePercent: number;
   colaAdjustment: number;
   investmentReturn: number;
-  onChangeInflationRatePercent: (valueAsString: string, valueAsNumber: number) => void;
-  onChangeColaAdjustment: (valueAsString: string, valueAsNumber: number) => void;
-  onChangeInvestmentReturn: (valueAsString: string, valueAsNumber: number) => void;
+  onChangeInflationRatePercent: (
+    valueAsString: string,
+    valueAsNumber: number
+  ) => void;
+  onChangeColaAdjustment: (
+    valueAsString: string,
+    valueAsNumber: number
+  ) => void;
+  onChangeInvestmentReturn: (
+    valueAsString: string,
+    valueAsNumber: number
+  ) => void;
 }
 
 const EconomyInputCard: React.FC<EconomyInputCardProps> = ({
@@ -568,20 +489,17 @@ const EconomyInputCard: React.FC<EconomyInputCardProps> = ({
       borderWidth="1px"
     >
       <CardHeader>
-        <Heading size={"lg"}>The Economy</Heading>
-        <Text>
-          Feel free to adjust the rate of inflation, the Social Security
-          COLA (cost-of-living adjustment), and the average investment rate
-          of return. We have good values to start with.
+        <Heading size={"lg"}>Economic Assumptions</Heading>
+        <Text mb={2}>
+          Adjust these values to match your expectations for inflation, Social
+          Security increases, and investment returns.
         </Text>
-        <br />
-        <Text>
-          The average rate of inflation for the last 30 years is 2.4%. The
-          COLA increase during that same period is 2.3%. The S&P 500
-          performance averages 10.3%. A more conservative portfolio of bonds
-          averages from 4.2% to 4.7%. Common guidance suggests a portfolio
-          of 60% stocks and 40% bonds. That would be 60% × 10.3% (stocks) +
-          40% × 4.5% (bonds) = 8% average annual return.
+        <Text fontSize="sm" color={useColorModeValue("gray.600", "gray.400")}>
+          The 20-year rate of inflation is 2.4%, while Social Security
+          cost-of-living adjustment (COLA) is 2.3%. The S&P500 yields 10.3% in
+          the same period, while bond yields are in the 4.3-4.7% range. Common
+          guidance is a 60/40 stocks/bonds mix, which puts the 20-year return at
+          8%.
         </Text>
       </CardHeader>
 
@@ -628,7 +546,10 @@ interface SocialSecurityInputCardProps {
   ssMonthlyAtFRA: number;
   ssMonthlyAt70: number;
   onChangeSsMonthlyAt62: (valueAsString: string, valueAsNumber: number) => void;
-  onChangeSsMonthlyAtFRA: (valueAsString: string, valueAsNumber: number) => void;
+  onChangeSsMonthlyAtFRA: (
+    valueAsString: string,
+    valueAsNumber: number
+  ) => void;
   onChangeSsMonthlyAt70: (valueAsString: string, valueAsNumber: number) => void;
 }
 
@@ -654,9 +575,9 @@ const SocialSecurityInputCard: React.FC<SocialSecurityInputCardProps> = ({
         <Alert status="info">
           <AlertIcon />
           Try setting, say, the FRA number to your specific Social Security
-          payment amount. Then look at the FRA line in the graph, and switch
-          the table view to FRA too. That will tailor all calculations
-          specific to you.
+          payment amount. Then look at the FRA line in the graph, and switch the
+          table view to FRA too. That will tailor all calculations specific to
+          you.
         </Alert>
       </CardHeader>
 
@@ -693,126 +614,34 @@ const RetirementCalculator = (): JSX.Element => {
     inflationRatePercent: 2.4,
     initialBalance: 100000,
     desiredMonthlyIncome: 3000,
+    socialSecurity: 3627,
     colaAdjustment: 2.3,
     investmentReturn: 8,
-    ssMonthlyAt62: 2572,
-    ssMonthlyAtFRA: 3627,
-    ssMonthlyAt70: 4500,
   });
 
-  const [selectedScenario, setSelectedScenario] = useState<ScenarioOption>("62");
+  const [selectedScenario] = useState<ScenarioOption>("default");
 
   // Current parameters based on user input
   const currentYear = new Date().getFullYear();
 
-  // Calculate scenarios for different SS claiming ages
-  const calculateScenario = (ssMonthlyBenefit: number, years = 30): ScenarioRow[] => {
-    const results: ScenarioRow[] = [];
-    const {
-      initialBalance,
-      desiredMonthlyIncome,
-      colaAdjustment,
-      inflationRatePercent,
-      investmentReturn,
-    } = financialParams;
-
-    // Monthly figures
-    let monthlySSBenefit = ssMonthlyBenefit;
-    let requiredMonthlyIncome = desiredMonthlyIncome;
-    let requiredFrom401k = requiredMonthlyIncome - monthlySSBenefit;
-    let balance = initialBalance;
-
-    for (let year = 0; year < years; year++) {
-      const yearlySSBenefit = monthlySSBenefit * 12;
-      const yearlyFrom401k = requiredFrom401k * 12;
-      const totalYearlyIncome = yearlySSBenefit + yearlyFrom401k;
-      const yearlyReturn = (balance * investmentReturn) / 100.0;
-      const yearEndBalance = balance + yearlyReturn - yearlyFrom401k;
-
-      results.push({
-        year: currentYear + year,
-        ssMonthly: monthlySSBenefit,
-        requiredFrom401kMonthly: requiredFrom401k,
-        totalMonthlyIncome: monthlySSBenefit + requiredFrom401k,
-        startingBalance: balance,
-        yearlyReturn: yearlyReturn,
-        endingBalance: yearEndBalance > 0 ? yearEndBalance : 0,
-        withdrawalRate: ((yearlyFrom401k / balance) * 100).toFixed(2),
-      });
-
-      // Update for next year
-      monthlySSBenefit *= 1 + colaAdjustment / 100.0; // Apply COLA
-      requiredMonthlyIncome *= 1 + inflationRatePercent / 100.0; // Adjust income for inflation
-      requiredFrom401k = requiredMonthlyIncome - monthlySSBenefit;
-      balance = yearEndBalance;
-
-      // If balance goes negative, mark as depleted
-      if (balance < 0) {
-        for (let i = year + 1; i < years; i++) {
-          results.push({
-            year: currentYear + i,
-            ssMonthly:
-              monthlySSBenefit * Math.pow(1 + colaAdjustment / 100.0, i - year),
-            requiredFrom401kMonthly: 0,
-            totalMonthlyIncome:
-              monthlySSBenefit * Math.pow(1 + colaAdjustment / 100.0, i - year),
-            startingBalance: 0,
-            yearlyReturn: 0,
-            endingBalance: 0,
-            withdrawalRate: "0.00",
-          });
-        }
-        break;
-      }
-    }
-
-    return results;
-  };
-
-  // Calculate our three scenarios
-  const scenario62 = calculateScenario(financialParams.ssMonthlyAt62);
-  const scenarioFRA = calculateScenario(financialParams.ssMonthlyAtFRA);
-  const scenario70 = calculateScenario(financialParams.ssMonthlyAt70);
-
-  // Get the scenario data based on the selected option
-  const getScenario = (scenario: ScenarioOption): ScenarioRow[] => {
-    switch (scenario) {
-      case "62":
-        return scenario62;
-      case "FRA":
-        return scenarioFRA;
-      case "70":
-        return scenario70;
-      default:
-        return scenarioFRA;
-    }
-  };
+  // Calculate our scenario
+  const scenarioData = calculateScenario(financialParams);
 
   // Prepare chart data
-  const chartData: ChartData[] = [];
-  for (let i = 0; i < 30; i++) {
-    chartData.push({
-      year: currentYear + i,
-      "SS at 62": i < scenario62.length ? scenario62[i].endingBalance : 0,
-      "SS at FRA": i < scenarioFRA.length ? scenarioFRA[i].endingBalance : 0,
-      "SS at 70": i < scenario70.length ? scenario70[i].endingBalance : 0,
-    });
-  }
-
-  // Event handlers - using function to update specific property in state
-  const updateFinancialParam = <K extends keyof FinancialParams>(
+  const chartData = prepareChartData(scenarioData);
+  
+  // Handler for updating financial parameters
+  const handleUpdateParam = <K extends keyof FinancialParams>(
     param: K,
     value: number
   ) => {
-    setFinancialParams(prev => ({
-      ...prev,
-      [param]: value
-    }));
+    setFinancialParams((prev) => updateFinancialParam(prev, param, value));
   };
 
-  const handleScenarioClick = (option: ScenarioOption) => {
-    setSelectedScenario(option);
-  };
+  // No longer needed since we only have one scenario
+  // const handleScenarioClick = (option: ScenarioOption) => {
+  //   setSelectedScenario(option);
+  // };
 
   return (
     <>
@@ -820,37 +649,92 @@ const RetirementCalculator = (): JSX.Element => {
         <MoneyInputCard
           initialBalance={financialParams.initialBalance}
           desiredMonthlyIncome={financialParams.desiredMonthlyIncome}
-          onChangeInitialBalance={(_, value) => updateFinancialParam('initialBalance', value)}
-          onChangeDesiredMonthlyIncome={(_, value) => updateFinancialParam('desiredMonthlyIncome', value)}
+          socialSecurity={financialParams.socialSecurity}
+          onChangeInitialBalance={(_, value) =>
+            handleUpdateParam("initialBalance", value)
+          }
+          onChangeDesiredMonthlyIncome={(_, value) =>
+            handleUpdateParam("desiredMonthlyIncome", value)
+          }
+          onChangeSocialSecurity={(_, value) =>
+            handleUpdateParam("socialSecurity", value)
+          }
         />
 
-        <BalanceProjectionCard
-          chartData={chartData}
-          inflationRatePercent={financialParams.inflationRatePercent}
-          colaAdjustment={financialParams.colaAdjustment}
-          investmentReturn={financialParams.investmentReturn}
-          ssMonthlyAt62={financialParams.ssMonthlyAt62}
-          ssMonthlyAtFRA={financialParams.ssMonthlyAtFRA}
-          ssMonthlyAt70={financialParams.ssMonthlyAt70}
-          selectedScenario={selectedScenario}
-          onScenarioClick={handleScenarioClick}
+        <WithdrawalPreviewCard
+          scenarioData={scenarioData}
+          currentYear={currentYear}
         />
 
-        <DetailedProjectionCard
-          selectedScenario={selectedScenario}
-          scenarioData={getScenario(selectedScenario)}
-          onScenarioClick={handleScenarioClick}
-        />
+        <Box>
+          <Accordion allowToggle>
+            <AccordionItem
+              border="none"
+              boxShadow="sm"
+              borderRadius="lg"
+              mb={2}
+            >
+              <h2>
+                <AccordionButton
+                  py={4}
+                  borderTopRadius="lg"
+                  bg={useColorModeValue("gray.100", "gray.600")}
+                  _hover={{ bg: useColorModeValue("gray.200", "gray.500") }}
+                >
+                  <Box as="span" flex="1" textAlign="left" fontWeight="bold">
+                    View Detailed 30-Year Projection
+                  </Box>
+                  <AccordionIcon />
+                </AccordionButton>
+              </h2>
+              <AccordionPanel pb={4} px={0}>
+                <DetailedProjectionCard scenarioData={scenarioData} />
+              </AccordionPanel>
+            </AccordionItem>
+
+            <AccordionItem border="none" boxShadow="sm" borderRadius="lg">
+              <h2>
+                <AccordionButton
+                  py={4}
+                  borderTopRadius="lg"
+                  bg={useColorModeValue("gray.100", "gray.600")}
+                  _hover={{ bg: useColorModeValue("gray.200", "gray.500") }}
+                >
+                  <Box as="span" flex="1" textAlign="left" fontWeight="bold">
+                    View Savings Projection Chart
+                  </Box>
+                  <AccordionIcon />
+                </AccordionButton>
+              </h2>
+              <AccordionPanel pb={4} px={0}>
+                <BalanceProjectionCard
+                  chartData={chartData}
+                  inflationRatePercent={financialParams.inflationRatePercent}
+                  colaAdjustment={financialParams.colaAdjustment}
+                  investmentReturn={financialParams.investmentReturn}
+                  socialSecurity={financialParams.socialSecurity}
+                />
+              </AccordionPanel>
+            </AccordionItem>
+          </Accordion>
+        </Box>
 
         <EconomyInputCard
           inflationRatePercent={financialParams.inflationRatePercent}
           colaAdjustment={financialParams.colaAdjustment}
           investmentReturn={financialParams.investmentReturn}
-          onChangeInflationRatePercent={(_, value) => updateFinancialParam('inflationRatePercent', value)}
-          onChangeColaAdjustment={(_, value) => updateFinancialParam('colaAdjustment', value)}
-          onChangeInvestmentReturn={(_, value) => updateFinancialParam('investmentReturn', value)}
+          onChangeInflationRatePercent={(_, value) =>
+            handleUpdateParam("inflationRatePercent", value)
+          }
+          onChangeColaAdjustment={(_, value) =>
+            handleUpdateParam("colaAdjustment", value)
+          }
+          onChangeInvestmentReturn={(_, value) =>
+            handleUpdateParam("investmentReturn", value)
+          }
         />
 
+        {/* Social Security inputs are now handled in the Money card, so this card is hidden 
         <SocialSecurityInputCard
           ssMonthlyAt62={financialParams.ssMonthlyAt62}
           ssMonthlyAtFRA={financialParams.ssMonthlyAtFRA}
@@ -859,6 +743,7 @@ const RetirementCalculator = (): JSX.Element => {
           onChangeSsMonthlyAtFRA={(_, value) => updateFinancialParam('ssMonthlyAtFRA', value)}
           onChangeSsMonthlyAt70={(_, value) => updateFinancialParam('ssMonthlyAt70', value)}
         />
+        */}
       </VStack>
     </>
   );

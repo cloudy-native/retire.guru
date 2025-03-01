@@ -15,6 +15,7 @@
     "serve": "gatsby serve",
     "clean": "gatsby clean",
     "typecheck": "tsc --noEmit",
+    "test": "jest",
     "theme": "chakra-cli tokens src/theme/index.ts",
     "theme:watch": "chakra-cli tokens src/theme/index.ts --watch",
     "deploy": "gatsby build --prefix-paths && gh-pages -d public",
@@ -51,10 +52,17 @@
   },
   "devDependencies": {
     "@chakra-ui/cli": "^2.3.0",
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^14.3.1",
+    "@types/jest": "^29.5.14",
     "@types/node": "^20.0.0",
     "@types/react": "^18.0.29",
     "@types/react-dom": "^18.0.11",
     "gh-pages": "^6.3.0",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
+    "ts-jest": "^29.2.6",
     "typescript": "^5.0.2"
   }
 }

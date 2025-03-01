@@ -12,10 +12,9 @@ import {
   useColorMode,
   useColorModeValue,
   useDisclosure,
-} from "@chakra-ui/react";
+} from "@chakra-ui/react";˝
 import { Link as GatsbyLink } from "gatsby";
 import React from "react";
-import BuyMeCoffeeButton from "./BuyMeCoffeeButton";
 
 interface NavItem {
   label: string;
