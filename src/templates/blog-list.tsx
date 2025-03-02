@@ -53,7 +53,8 @@ const BlogHero = () => {
           mx="auto"
           lineHeight="1.8"
         >
-          Insights, strategies, and updates to help you navigate your retirement journey.
+          Insights, strategies, and updates to help you navigate your retirement
+          journey.
         </Text>
       </Stack>
     </Box>
@@ -65,9 +66,9 @@ const BlogPostCard = ({ post }) => {
   const borderColor = useColorModeValue("gray.200", "gray.700");
   const textColor = useColorModeValue("gray.700", "gray.300");
   const tagBg = useColorModeValue("blue.50", "blue.900");
-  
+
   // Image handling removed for simplicity
-  
+
   return (
     <Box
       as={Link}
@@ -93,15 +94,15 @@ const BlogPostCard = ({ post }) => {
       >
         <VStack align="start" spacing={4}>
           {/* Featured image would go here */}
-          
+
           <Heading as="h3" fontSize="xl" lineHeight="tight">
             {post.frontmatter.title}
           </Heading>
-          
+
           <Text color={textColor} noOfLines={3}>
             {post.frontmatter.description || post.excerpt}
           </Text>
-          
+
           {post.frontmatter.tags && (
             <HStack spacing={2} mt={2} wrap="wrap">
               {post.frontmatter.tags.map((tag) => (
@@ -111,12 +112,15 @@ const BlogPostCard = ({ post }) => {
               ))}
             </HStack>
           )}
-          
+
           <Flex justify="space-between" align="center" w="full" mt={2}>
             <Text fontSize="sm" fontWeight="medium">
               {post.frontmatter.author || "Retire.Guru Team"}
             </Text>
-            <Text fontSize="sm" color={useColorModeValue("gray.500", "gray.400")}>
+            <Text
+              fontSize="sm"
+              color={useColorModeValue("gray.500", "gray.400")}
+            >
               {new Date(post.frontmatter.date).toLocaleDateString("en-US", {
                 year: "numeric",
                 month: "long",
@@ -137,14 +141,14 @@ const BlogListTemplate = ({ data, pageContext }) => {
   const prevPage = currentPage - 1 === 1 ? "/blog" : `/blog/${currentPage - 1}`;
   const nextPage = `/blog/${currentPage + 1}`;
   const posts = data.allMarkdownRemark.edges;
-  
+
   // Colors
   const accentColor = useColorModeValue("blue.600", "blue.300");
-  
+
   return (
     <>
       <BlogHero />
-      
+
       <Container maxW="6xl" py={12}>
         <VStack spacing={10} align="stretch">
           <SimpleGrid columns={{ base: 1, md: 2 }} spacing={8}>
@@ -152,16 +156,27 @@ const BlogListTemplate = ({ data, pageContext }) => {
               <BlogPostCard key={node.fields.slug} post={node} />
             ))}
           </SimpleGrid>
-          
+
           {numPages > 1 && (
             <Flex justify="space-between" mt={10}>
               {!isFirst && (
-                <Button as={Link} to={prevPage} colorScheme="blue" variant="outline">
+                <Button
+                  as={Link}
+                  to={prevPage}
+                  colorScheme="blue"
+                  variant="outline"
+                >
                   ← Previous Page
                 </Button>
               )}
               {!isLast && (
-                <Button as={Link} to={nextPage} colorScheme="blue" variant="outline" ml="auto">
+                <Button
+                  as={Link}
+                  to={nextPage}
+                  colorScheme="blue"
+                  variant="outline"
+                  ml="auto"
+                >
                   Next Page →
                 </Button>
               )}
@@ -180,7 +195,7 @@ export const Head: HeadFC = () => <title>Blog | Retire.Guru</title>;
 export const pageQuery = graphql`
   query BlogListQuery($skip: Int!, $limit: Int!) {
     allMarkdownRemark(
-      sort: { fields: [frontmatter___date], order: DESC }
+      sort: { frontmatter: { date: DESC } }
       limit: $limit
       skip: $skip
     ) {
