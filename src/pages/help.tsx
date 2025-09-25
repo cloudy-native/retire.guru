@@ -34,6 +34,8 @@ import economy from "../images/economy.png";
 import incomePreview from "../images/income-preview.png";
 import withdrawingTooMuch from "../images/withdrawing-too-much.png";
 import yourFinancials from "../images/your-financials.png";
+import cumulativeLifetimeBenefits from "../images/cumulative-lifetime-benefits.png";
+import socialSecurityTiming from "../images/social-security-timing.png";
 
 const HelpPageHero = () => {
 	const bgGradient = "linear(to-b, blue.50, white)";
@@ -406,6 +408,72 @@ const HelpPage: React.FC<PageProps> = () => {
 								longevity.
 							</ListItem>
 						</OrderedList>
+					</HelpSection>
+
+					<HelpSection title="Step 6: Explore Social Security Timing">
+						<Text fontSize="md" lineHeight="tall" mb={4} color={textColor}>
+							Use the new "Social Security Timing" section to experiment with
+							different claiming ages. Add your birth year, adjust your Primary
+							Insurance Amount (PIA), move the slider to pick a claiming date,
+							and compare how monthly benefits shift between ages 62, Full
+							Retirement Age (FRA), and 70.
+						</Text>
+
+						<Text fontSize="md" lineHeight="tall" mb={4} color={textColor}>
+							We need to know the year you were born because Full Retirement Age
+							(FRA) for Social Security, set at 65 for those born before 1938,
+							rose under 1983 reforms to 66 for 1943–1954 births, then to 67 for
+							those born in 1960 or later, stabilizing in 2023. No further
+							changes have occurred by 2025; claiming at 62 cuts benefits up to
+							30%, while delaying to 70 increases them by 8% yearly.
+						</Text>
+
+						<Image
+							src={socialSecurityTiming}
+							alt="Social Security timing slider"
+							borderRadius="lg"
+							maxW="100%"
+							my={4}
+						/>
+
+						<Text fontSize="md" lineHeight="tall" mb={4} color={textColor}>
+							Open the chart to view a cumulative benefits chart. This
+							visualization shows the total Social Security dollars received
+							over time for each claiming age option, including the custom age
+							you choose.
+						</Text>
+
+						<Image
+							src={cumulativeLifetimeBenefits}
+							alt="Social Security timing cumulative chart"
+							borderRadius="lg"
+							maxW="100%"
+							my={4}
+						/>
+
+						<UnorderedList spacing={2} pl={5} mb={4}>
+							<ListItem>
+								<Text fontWeight="bold">Claiming Age Slider:</Text> Displayed in
+								years and months so you can precisely match your planned start
+								date.
+							</ListItem>
+							<ListItem>
+								<Text fontWeight="bold">Use This Amount Button:</Text> Instantly
+								applies the selected monthly Social Security benefit to the main
+								calculator inputs.
+							</ListItem>
+							<ListItem>
+								<Text fontWeight="bold">Cumulative Benefit Chart:</Text>{" "}
+								Compares how total lifetime benefits stack up when claiming
+								early versus waiting.
+							</ListItem>
+						</UnorderedList>
+
+						<Alert status="info">
+							<AlertIcon />
+							Screenshots coming soon—replace these placeholders once your
+							visuals are ready.
+						</Alert>
 					</HelpSection>
 
 					<HelpSection title="Social Security Benefits">

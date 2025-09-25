@@ -33,22 +33,22 @@ export const calculateScenario = (
   let balance = initialBalance;
 
   for (let year = 0; year < years; year++) {
-    const yearlySSBenefit = monthlySSBenefit * 12;
     const yearlyFrom401k = requiredFrom401k * 12;
-    const totalYearlyIncome = yearlySSBenefit + yearlyFrom401k;
     const yearlyReturn = (balance * investmentReturn) / 100.0;
     const yearEndBalance = balance + yearlyReturn - yearlyFrom401k;
 
     // Inflation index for this year (1.0 in first year)
-    const inflationIndex = Math.pow(1 + inflationRatePercent / 100.0, year);
+    const inflationIndex = (1 + inflationRatePercent / 100.0) ** year;
 
     // Real (today's dollars) values
     const ssMonthlyReal = monthlySSBenefit / inflationIndex;
     const requiredFrom401kMonthlyReal = requiredFrom401k / inflationIndex;
-    const totalMonthlyIncomeReal = (monthlySSBenefit + requiredFrom401k) / inflationIndex;
+    const totalMonthlyIncomeReal =
+      (monthlySSBenefit + requiredFrom401k) / inflationIndex;
     const startingBalanceReal = balance / inflationIndex;
     const yearlyReturnReal = yearlyReturn / inflationIndex;
-    const endingBalanceReal = (yearEndBalance > 0 ? yearEndBalance : 0) / inflationIndex;
+    const endingBalanceReal =
+      (yearEndBalance > 0 ? yearEndBalance : 0) / inflationIndex;
 
     results.push({
       year: currentYear + year,
@@ -80,18 +80,22 @@ export const calculateScenario = (
         results.push({
           year: currentYear + i,
           ssMonthly:
-            monthlySSBenefit * Math.pow(1 + colaAdjustment / 100.0, i - year),
+            monthlySSBenefit * (1 + colaAdjustment / 100.0) ** (i - year),
           requiredFrom401kMonthly: 0,
           totalMonthlyIncome:
-            monthlySSBenefit * Math.pow(1 + colaAdjustment / 100.0, i - year),
+            monthlySSBenefit * (1 + colaAdjustment / 100.0) ** (i - year),
           startingBalance: 0,
           yearlyReturn: 0,
           endingBalance: 0,
           withdrawalRate: "0.00",
-          inflationIndex: Math.pow(1 + inflationRatePercent / 100.0, i),
-          ssMonthlyReal: (monthlySSBenefit * Math.pow(1 + colaAdjustment / 100.0, i - year)) / Math.pow(1 + inflationRatePercent / 100.0, i),
+          inflationIndex: (1 + inflationRatePercent / 100.0) ** i,
+          ssMonthlyReal:
+            (monthlySSBenefit * (1 + colaAdjustment / 100.0) ** (i - year)) /
+            (1 + inflationRatePercent / 100.0) ** i,
           requiredFrom401kMonthlyReal: 0,
-          totalMonthlyIncomeReal: (monthlySSBenefit * Math.pow(1 + colaAdjustment / 100.0, i - year)) / Math.pow(1 + inflationRatePercent / 100.0, i),
+          totalMonthlyIncomeReal:
+            (monthlySSBenefit * (1 + colaAdjustment / 100.0) ** (i - year)) /
+            (1 + inflationRatePercent / 100.0) ** i,
           startingBalanceReal: 0,
           yearlyReturnReal: 0,
           endingBalanceReal: 0,
@@ -121,7 +125,8 @@ export const prepareChartData = (
     chartData.push({
       year: currentYear + i,
       Balance: i < scenarioData.length ? scenarioData[i].endingBalance : 0,
-      BalanceReal: i < scenarioData.length ? scenarioData[i].endingBalanceReal : 0,
+      BalanceReal:
+        i < scenarioData.length ? scenarioData[i].endingBalanceReal : 0,
     });
   }
 
