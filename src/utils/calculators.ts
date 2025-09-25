@@ -2,7 +2,7 @@
  * Financial calculation utilities
  */
 
-import { ChartData, FinancialParams, ScenarioRow } from "./types";
+import type { ChartData, FinancialParams, ScenarioRow } from "./types";
 
 /**
  * Calculates retirement scenario based on financial parameters
@@ -11,101 +11,101 @@ import { ChartData, FinancialParams, ScenarioRow } from "./types";
  * @returns Array of scenario data by year
  */
 export const calculateScenario = (
-  financialParams: FinancialParams,
-  years = 30
+	financialParams: FinancialParams,
+	years = 30,
 ): ScenarioRow[] => {
-  const results: ScenarioRow[] = [];
-  const {
-    initialBalance,
-    desiredMonthlyIncome,
-    socialSecurity,
-    colaAdjustment,
-    inflationRatePercent,
-    investmentReturn,
-  } = financialParams;
+	const results: ScenarioRow[] = [];
+	const {
+		initialBalance,
+		desiredMonthlyIncome,
+		socialSecurity,
+		colaAdjustment,
+		inflationRatePercent,
+		investmentReturn,
+	} = financialParams;
 
-  const currentYear = new Date().getFullYear();
+	const currentYear = new Date().getFullYear();
 
-  // Monthly figures
-  let monthlySSBenefit = socialSecurity;
-  let requiredMonthlyIncome = desiredMonthlyIncome;
-  let requiredFrom401k = requiredMonthlyIncome - monthlySSBenefit;
-  let balance = initialBalance;
+	// Monthly figures
+	let monthlySSBenefit = socialSecurity;
+	let requiredMonthlyIncome = desiredMonthlyIncome;
+	let requiredFrom401k = requiredMonthlyIncome - monthlySSBenefit;
+	let balance = initialBalance;
 
-  for (let year = 0; year < years; year++) {
-    const yearlyFrom401k = requiredFrom401k * 12;
-    const yearlyReturn = (balance * investmentReturn) / 100.0;
-    const yearEndBalance = balance + yearlyReturn - yearlyFrom401k;
+	for (let year = 0; year < years; year++) {
+		const yearlyFrom401k = requiredFrom401k * 12;
+		const yearlyReturn = (balance * investmentReturn) / 100.0;
+		const yearEndBalance = balance + yearlyReturn - yearlyFrom401k;
 
-    // Inflation index for this year (1.0 in first year)
-    const inflationIndex = (1 + inflationRatePercent / 100.0) ** year;
+		// Inflation index for this year (1.0 in first year)
+		const inflationIndex = (1 + inflationRatePercent / 100.0) ** year;
 
-    // Real (today's dollars) values
-    const ssMonthlyReal = monthlySSBenefit / inflationIndex;
-    const requiredFrom401kMonthlyReal = requiredFrom401k / inflationIndex;
-    const totalMonthlyIncomeReal =
-      (monthlySSBenefit + requiredFrom401k) / inflationIndex;
-    const startingBalanceReal = balance / inflationIndex;
-    const yearlyReturnReal = yearlyReturn / inflationIndex;
-    const endingBalanceReal =
-      (yearEndBalance > 0 ? yearEndBalance : 0) / inflationIndex;
+		// Real (today's dollars) values
+		const ssMonthlyReal = monthlySSBenefit / inflationIndex;
+		const requiredFrom401kMonthlyReal = requiredFrom401k / inflationIndex;
+		const totalMonthlyIncomeReal =
+			(monthlySSBenefit + requiredFrom401k) / inflationIndex;
+		const startingBalanceReal = balance / inflationIndex;
+		const yearlyReturnReal = yearlyReturn / inflationIndex;
+		const endingBalanceReal =
+			(yearEndBalance > 0 ? yearEndBalance : 0) / inflationIndex;
 
-    results.push({
-      year: currentYear + year,
-      ssMonthly: monthlySSBenefit,
-      requiredFrom401kMonthly: requiredFrom401k,
-      totalMonthlyIncome: monthlySSBenefit + requiredFrom401k,
-      startingBalance: balance,
-      yearlyReturn: yearlyReturn,
-      endingBalance: yearEndBalance > 0 ? yearEndBalance : 0,
-      withdrawalRate: ((yearlyFrom401k / balance) * 100).toFixed(2),
-      inflationIndex,
-      ssMonthlyReal,
-      requiredFrom401kMonthlyReal,
-      totalMonthlyIncomeReal,
-      startingBalanceReal,
-      yearlyReturnReal,
-      endingBalanceReal,
-    });
+		results.push({
+			year: currentYear + year,
+			ssMonthly: monthlySSBenefit,
+			requiredFrom401kMonthly: requiredFrom401k,
+			totalMonthlyIncome: monthlySSBenefit + requiredFrom401k,
+			startingBalance: balance,
+			yearlyReturn: yearlyReturn,
+			endingBalance: yearEndBalance > 0 ? yearEndBalance : 0,
+			withdrawalRate: ((yearlyFrom401k / balance) * 100).toFixed(2),
+			inflationIndex,
+			ssMonthlyReal,
+			requiredFrom401kMonthlyReal,
+			totalMonthlyIncomeReal,
+			startingBalanceReal,
+			yearlyReturnReal,
+			endingBalanceReal,
+		});
 
-    // Update for next year
-    monthlySSBenefit *= 1 + colaAdjustment / 100.0; // Apply COLA
-    requiredMonthlyIncome *= 1 + inflationRatePercent / 100.0; // Adjust income for inflation
-    requiredFrom401k = requiredMonthlyIncome - monthlySSBenefit;
-    balance = yearEndBalance;
+		// Update for next year
+		monthlySSBenefit *= 1 + colaAdjustment / 100.0; // Apply COLA
+		requiredMonthlyIncome *= 1 + inflationRatePercent / 100.0; // Adjust income for inflation
+		requiredFrom401k = requiredMonthlyIncome - monthlySSBenefit;
+		balance = yearEndBalance;
 
-    // If balance goes negative, mark as depleted
-    if (balance < 0) {
-      for (let i = year + 1; i < years; i++) {
-        results.push({
-          year: currentYear + i,
-          ssMonthly:
-            monthlySSBenefit * (1 + colaAdjustment / 100.0) ** (i - year),
-          requiredFrom401kMonthly: 0,
-          totalMonthlyIncome:
-            monthlySSBenefit * (1 + colaAdjustment / 100.0) ** (i - year),
-          startingBalance: 0,
-          yearlyReturn: 0,
-          endingBalance: 0,
-          withdrawalRate: "0.00",
-          inflationIndex: (1 + inflationRatePercent / 100.0) ** i,
-          ssMonthlyReal:
-            (monthlySSBenefit * (1 + colaAdjustment / 100.0) ** (i - year)) /
-            (1 + inflationRatePercent / 100.0) ** i,
-          requiredFrom401kMonthlyReal: 0,
-          totalMonthlyIncomeReal:
-            (monthlySSBenefit * (1 + colaAdjustment / 100.0) ** (i - year)) /
-            (1 + inflationRatePercent / 100.0) ** i,
-          startingBalanceReal: 0,
-          yearlyReturnReal: 0,
-          endingBalanceReal: 0,
-        });
-      }
-      break;
-    }
-  }
+		// If balance goes negative, mark as depleted
+		if (balance < 0) {
+			for (let i = year + 1; i < years; i++) {
+				results.push({
+					year: currentYear + i,
+					ssMonthly:
+						monthlySSBenefit * (1 + colaAdjustment / 100.0) ** (i - year),
+					requiredFrom401kMonthly: 0,
+					totalMonthlyIncome:
+						monthlySSBenefit * (1 + colaAdjustment / 100.0) ** (i - year),
+					startingBalance: 0,
+					yearlyReturn: 0,
+					endingBalance: 0,
+					withdrawalRate: "0.00",
+					inflationIndex: (1 + inflationRatePercent / 100.0) ** i,
+					ssMonthlyReal:
+						(monthlySSBenefit * (1 + colaAdjustment / 100.0) ** (i - year)) /
+						(1 + inflationRatePercent / 100.0) ** i,
+					requiredFrom401kMonthlyReal: 0,
+					totalMonthlyIncomeReal:
+						(monthlySSBenefit * (1 + colaAdjustment / 100.0) ** (i - year)) /
+						(1 + inflationRatePercent / 100.0) ** i,
+					startingBalanceReal: 0,
+					yearlyReturnReal: 0,
+					endingBalanceReal: 0,
+				});
+			}
+			break;
+		}
+	}
 
-  return results;
+	return results;
 };
 
 /**
@@ -115,22 +115,22 @@ export const calculateScenario = (
  * @returns Array of chart data points
  */
 export const prepareChartData = (
-  scenarioData: ScenarioRow[],
-  years = 30
+	scenarioData: ScenarioRow[],
+	years = 30,
 ): ChartData[] => {
-  const chartData: ChartData[] = [];
-  const currentYear = new Date().getFullYear();
+	const chartData: ChartData[] = [];
+	const currentYear = new Date().getFullYear();
 
-  for (let i = 0; i < years; i++) {
-    chartData.push({
-      year: currentYear + i,
-      Balance: i < scenarioData.length ? scenarioData[i].endingBalance : 0,
-      BalanceReal:
-        i < scenarioData.length ? scenarioData[i].endingBalanceReal : 0,
-    });
-  }
+	for (let i = 0; i < years; i++) {
+		chartData.push({
+			year: currentYear + i,
+			Balance: i < scenarioData.length ? scenarioData[i].endingBalance : 0,
+			BalanceReal:
+				i < scenarioData.length ? scenarioData[i].endingBalanceReal : 0,
+		});
+	}
 
-  return chartData;
+	return chartData;
 };
 
 /**
@@ -141,12 +141,12 @@ export const prepareChartData = (
  * @returns Updated financial parameters
  */
 export const updateFinancialParam = <K extends keyof FinancialParams>(
-  currentParams: FinancialParams,
-  param: K,
-  value: number
+	currentParams: FinancialParams,
+	param: K,
+	value: number,
 ): FinancialParams => {
-  return {
-    ...currentParams,
-    [param]: value,
-  };
+	return {
+		...currentParams,
+		[param]: value,
+	};
 };

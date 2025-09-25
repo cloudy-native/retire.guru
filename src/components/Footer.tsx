@@ -87,13 +87,13 @@ const Footer = () => {
 						</Text>
 					</Stack>
 
-          <Stack align={"flex-start"}>
-            <Text fontSize={"sm"}>
-              We are not financial planners or advisors. This site is for educational
-              purposes only. Always consult with a qualified financial advisor before
-              making any financial decisions.
-            </Text>
-          </Stack>
+					<Stack align={"flex-start"}>
+						<Text fontSize={"sm"}>
+							We are not financial planners or advisors. This site is for
+							educational purposes only. Always consult with a qualified
+							financial advisor before making any financial decisions.
+						</Text>
+					</Stack>
 				</SimpleGrid>
 			</Container>
 

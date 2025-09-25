@@ -12,14 +12,17 @@
     "clean": "gatsby clean",
     "deploy:gh": "gatsby build --prefix-paths && gh-pages -d public",
     "develop": "gatsby develop",
-    "lint": "eslint --ext .ts,.tsx src",
+    "lint": "biome lint .",
     "postinstall": "npm run theme",
     "serve": "gatsby serve",
     "start": "gatsby develop",
     "test": "jest",
     "theme:watch": "chakra-cli tokens src/theme/index.ts --watch",
     "theme": "chakra-cli tokens src/theme/index.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint:fix": "biome lint . --write",
+    "format": "biome format .",
+    "format:write": "biome format . --write"
   },
   "dependencies": {
     "@chakra-ui/icons": "^2.2.4",
@@ -51,6 +54,7 @@
     "recharts": "^2.15.4"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.2.4",
     "@chakra-ui/cli": "^2.5.8",
     "@eslint/js": "^9.36.0",
     "@testing-library/jest-dom": "^5.17.0",

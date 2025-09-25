@@ -1,17 +1,17 @@
-const path = require('path');
-const { createFilePath } = require('gatsby-source-filesystem');
+const path = require("path");
+const { createFilePath } = require("gatsby-source-filesystem");
 
 // Create blog post pages
 exports.createPages = async ({ graphql, actions, reporter }) => {
-  const { createPage } = actions;
+	const { createPage } = actions;
 
-  // Define templates
-  const blogPostTemplate = path.resolve('./src/templates/blog-post-simple.tsx');
-  // We'll use the built-in pages/blog.tsx instead of a template for the blog list
-  // const blogListTemplate = path.resolve('./src/templates/blog-list.tsx');
+	// Define templates
+	const blogPostTemplate = path.resolve("./src/templates/blog-post-simple.tsx");
+	// We'll use the built-in pages/blog.tsx instead of a template for the blog list
+	// const blogListTemplate = path.resolve('./src/templates/blog-list.tsx');
 
-  // Get all markdown blog posts sorted by date
-  const result = await graphql(`
+	// Get all markdown blog posts sorted by date
+	const result = await graphql(`
     {
   allMarkdownRemark(sort: {frontmatter: {date: DESC}}, limit: 1000) {
     nodes {
@@ -24,33 +24,34 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
 }
   `);
 
-  if (result.errors) {
-    reporter.panicOnBuild(`Error while running GraphQL query.`, result.errors);
-    return;
-  }
+	if (result.errors) {
+		reporter.panicOnBuild(`Error while running GraphQL query.`, result.errors);
+		return;
+	}
 
-  const posts = result.data.allMarkdownRemark.nodes;
+	const posts = result.data.allMarkdownRemark.nodes;
 
-  // Create blog posts pages
-  if (posts.length > 0) {
-    posts.forEach((post, index) => {
-      const previousPostId = index === 0 ? null : posts[index - 1].id;
-      const nextPostId = index === posts.length - 1 ? null : posts[index + 1].id;
+	// Create blog posts pages
+	if (posts.length > 0) {
+		posts.forEach((post, index) => {
+			const previousPostId = index === 0 ? null : posts[index - 1].id;
+			const nextPostId =
+				index === posts.length - 1 ? null : posts[index + 1].id;
 
-      createPage({
-        path: post.fields.slug,
-        component: blogPostTemplate,
-        context: {
-          id: post.id,
-          slug: post.fields.slug,
-          previousPostId,
-          nextPostId,
-        },
-      });
-    });
+			createPage({
+				path: post.fields.slug,
+				component: blogPostTemplate,
+				context: {
+					id: post.id,
+					slug: post.fields.slug,
+					previousPostId,
+					nextPostId,
+				},
+			});
+		});
 
-    // We'll use the built-in pages/blog.tsx instead of creating paginated blog list pages
-    /*
+		// We'll use the built-in pages/blog.tsx instead of creating paginated blog list pages
+		/*
     const postsPerPage = 6;
     const numPages = Math.ceil(posts.length / postsPerPage);
 
@@ -67,27 +68,27 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
       });
     });
     */
-  }
+	}
 };
 
 exports.onCreateNode = ({ node, actions, getNode }) => {
-  const { createNodeField } = actions;
+	const { createNodeField } = actions;
 
-  if (node.internal.type === 'MarkdownRemark') {
-    const value = createFilePath({ node, getNode });
-    createNodeField({
-      name: 'slug',
-      node,
-      value: `/blog${value}`,
-    });
-  }
+	if (node.internal.type === "MarkdownRemark") {
+		const value = createFilePath({ node, getNode });
+		createNodeField({
+			name: "slug",
+			node,
+			value: `/blog${value}`,
+		});
+	}
 };
 
 exports.createSchemaCustomization = ({ actions }) => {
-  const { createTypes } = actions;
+	const { createTypes } = actions;
 
-  // Define the schema for frontmatter
-  createTypes(`
+	// Define the schema for frontmatter
+	createTypes(`
     type SiteSiteMetadata {
       title: String!
       description: String!

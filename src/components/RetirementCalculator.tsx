@@ -768,7 +768,15 @@ const SocialSecurityTimingCard: React.FC<SocialSecurityTimingCardProps> = ({
 		addOption(claimingAge, selectedMonthly);
 
 		return Array.from(optionMap.values()).sort((a, b) => a.age - b.age);
-	}, [monthlyAt62, monthlyAtFRA, monthlyAt70, claimingAge, selectedMonthly, formatAgeLabel, fra.age]);
+	}, [
+		monthlyAt62,
+		monthlyAtFRA,
+		monthlyAt70,
+		claimingAge,
+		selectedMonthly,
+		formatAgeLabel,
+		fra.age,
+	]);
 
 	type CumulativePoint = {
 		age: number;
@@ -779,13 +787,16 @@ const SocialSecurityTimingCard: React.FC<SocialSecurityTimingCardProps> = ({
 	const cumulativeBenefitData = React.useMemo<CumulativePoint[]>(() => {
 		const baseAge = 62;
 		const horizonYears = 30;
-		const rows: CumulativePoint[] = Array.from({ length: horizonYears + 1 }, (_, idx) => {
-			const age = baseAge + idx;
-			return {
-				age,
-				ageLabel: formatAgeLabel(age),
-			};
-		});
+		const rows: CumulativePoint[] = Array.from(
+			{ length: horizonYears + 1 },
+			(_, idx) => {
+				const age = baseAge + idx;
+				return {
+					age,
+					ageLabel: formatAgeLabel(age),
+				};
+			},
+		);
 
 		claimOptions.forEach((option) => {
 			const startMonth = Math.round((option.age - baseAge) * 12);
@@ -795,7 +806,9 @@ const SocialSecurityTimingCard: React.FC<SocialSecurityTimingCardProps> = ({
 				for (let month = 0; month < 12; month++) {
 					const currentMonth = yearStartMonth + month;
 					if (currentMonth >= startMonth) {
-						const yearsSinceClaim = Math.floor((currentMonth - startMonth) / 12);
+						const yearsSinceClaim = Math.floor(
+							(currentMonth - startMonth) / 12,
+						);
 						const monthlyBenefit =
 							option.monthly * (1 + colaAdjustment / 100) ** yearsSinceClaim;
 						cumulative += monthlyBenefit;
@@ -974,69 +987,80 @@ const SocialSecurityTimingCard: React.FC<SocialSecurityTimingCardProps> = ({
 						<Text fontSize="sm" color="gray.600">
 							vs PIA:{" "}
 							{piaMonthly > 0
-							? (((monthlyAt70 - piaMonthly) / piaMonthly) * 100).toFixed(0)
-							: 0}
-						%
-					</Text>
-				</Box>
-			</HStack>
+								? (((monthlyAt70 - piaMonthly) / piaMonthly) * 100).toFixed(0)
+								: 0}
+							%
+						</Text>
+					</Box>
+				</HStack>
 
-			<Accordion allowToggle mt={8}>
-				<AccordionItem border="none" boxShadow="sm" borderRadius="lg">
-					<h2>
-						<AccordionButton borderTopRadius="lg" py={3} bg="purple.100">
-							<Box flex="1" textAlign="left" fontWeight="bold">
-								Compare cumulative lifetime benefits
-							</Box>
-							<AccordionIcon />
-						</AccordionButton>
-					</h2>
-					<AccordionPanel pb={4} bg="white" borderBottomRadius="lg">
-						<Box px={2} py={2}>
-							<Text fontSize="sm" color="gray.600" mb={3}>
-								This chart shows total Social Security benefits received at each age,
-								assuming COLA adjustments of {colaAdjustment}% once benefits begin.
-							</Text>
-							<ChartContainer height={320}>
-								<ResponsiveContainer width="100%" height="100%">
-									<LineChart
-										data={cumulativeBenefitData}
-										margin={{ top: 10, right: 20, bottom: 20, left: 0 }}
-									>
-										<CartesianGrid strokeDasharray="3 3" />
-										<XAxis
-											dataKey="age"
-											tickFormatter={(value) => `${value}`}
-											label={{ value: "Age", position: "insideBottomRight", offset: -10 }}
-										/>
-										<YAxis
-											tickFormatter={(value) => formatCurrency(value)}
-											width={110}
-											label={{ value: "Total benefits", angle: -90, position: "insideLeft" }}
-										/>
-										<Tooltip
-											formatter={(value: number) => formatCurrency(value)}
-											labelFormatter={(value: number) => `Age ${formatAgeLabel(value)}`}
-										/>
-										<Legend />
-										{claimOptions.map((option, index) => (
-											<Line
-												key={option.key}
-												type="monotone"
-												dataKey={option.key}
-												name={`Claim at ${option.label}`}
-												stroke={lineColors[index % lineColors.length]}
-												strokeWidth={2}
-												dot={false}
+				<Accordion allowToggle mt={8}>
+					<AccordionItem border="none" boxShadow="sm" borderRadius="lg">
+						<h2>
+							<AccordionButton borderTopRadius="lg" py={3} bg="purple.100">
+								<Box flex="1" textAlign="left" fontWeight="bold">
+									Compare cumulative lifetime benefits
+								</Box>
+								<AccordionIcon />
+							</AccordionButton>
+						</h2>
+						<AccordionPanel pb={4} bg="white" borderBottomRadius="lg">
+							<Box px={2} py={2}>
+								<Text fontSize="sm" color="gray.600" mb={3}>
+									This chart shows total Social Security benefits received at
+									each age, assuming COLA adjustments of {colaAdjustment}% once
+									benefits begin.
+								</Text>
+								<ChartContainer height={320}>
+									<ResponsiveContainer width="100%" height="100%">
+										<LineChart
+											data={cumulativeBenefitData}
+											margin={{ top: 10, right: 20, bottom: 20, left: 0 }}
+										>
+											<CartesianGrid strokeDasharray="3 3" />
+											<XAxis
+												dataKey="age"
+												tickFormatter={(value) => `${value}`}
+												label={{
+													value: "Age",
+													position: "insideBottomRight",
+													offset: -10,
+												}}
 											/>
-										))}
-									</LineChart>
-								</ResponsiveContainer>
-							</ChartContainer>
-						</Box>
-					</AccordionPanel>
-				</AccordionItem>
-			</Accordion>
+											<YAxis
+												tickFormatter={(value) => formatCurrency(value)}
+												width={110}
+												label={{
+													value: "Total benefits",
+													angle: -90,
+													position: "insideLeft",
+												}}
+											/>
+											<Tooltip
+												formatter={(value: number) => formatCurrency(value)}
+												labelFormatter={(value: number) =>
+													`Age ${formatAgeLabel(value)}`
+												}
+											/>
+											<Legend />
+											{claimOptions.map((option, index) => (
+												<Line
+													key={option.key}
+													type="monotone"
+													dataKey={option.key}
+													name={`Claim at ${option.label}`}
+													stroke={lineColors[index % lineColors.length]}
+													strokeWidth={2}
+													dot={false}
+												/>
+											))}
+										</LineChart>
+									</ResponsiveContainer>
+								</ChartContainer>
+							</Box>
+						</AccordionPanel>
+					</AccordionItem>
+				</Accordion>
 			</CardBody>
 			<CardFooter>
 				<Alert status="info" fontSize="sm">

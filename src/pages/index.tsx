@@ -5,12 +5,12 @@ import RetirementCalculator from "../components/RetirementCalculator";
 import RetirementHero from "../components/RetirementHero";
 
 const IndexPage: React.FC<PageProps> = () => {
-  return (
-    <Container maxW={"6xl"}>
-      <RetirementHero />
-      <RetirementCalculator />
-    </Container>
-  );
+	return (
+		<Container maxW={"6xl"}>
+			<RetirementHero />
+			<RetirementCalculator />
+		</Container>
+	);
 };
 
 export default IndexPage;

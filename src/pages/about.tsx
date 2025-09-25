@@ -128,9 +128,9 @@ const AboutPage: React.FC<PageProps> = () => {
 							mx="auto"
 							color={textColor}
 						>
-							We believe everyone deserves a secure and fulfilling retirement. Our
-							mission is to demystify retirement planning through intuitive tools,
-							data-driven insights, and accessible financial education.
+							We believe everyone deserves a secure and fulfilling retirement.
+							Our mission is to demystify retirement planning through intuitive
+							tools, data-driven insights, and accessible financial education.
 						</Text>
 					</Box>
 
@@ -187,16 +187,16 @@ const AboutPage: React.FC<PageProps> = () => {
 						<Text fontSize="md" lineHeight="tall" mb={4} color={textColor}>
 							Retire.Guru was created after seeing firsthand how traditional
 							retirement planning tools often fell short. With a background in
-							technology and a passion for financial clarity, we set out to build
-							tools that make complex retirement questions understandable.
+							technology and a passion for financial clarity, we set out to
+							build tools that make complex retirement questions understandable.
 						</Text>
 
 						<Text fontSize="md" lineHeight="tall" mb={4} color={textColor}>
-							What began as a simple calculator has evolved into a
-							comprehensive set of tools that help people understand their
-							retirement options with clarity. These tools have helped individuals
-							optimize Social Security decisions, determine sustainable withdrawal
-							rates, and build confidence in their plans.
+							What began as a simple calculator has evolved into a comprehensive
+							set of tools that help people understand their retirement options
+							with clarity. These tools have helped individuals optimize Social
+							Security decisions, determine sustainable withdrawal rates, and
+							build confidence in their plans.
 						</Text>
 
 						<Text fontSize="md" lineHeight="tall" color={textColor}>
