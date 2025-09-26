@@ -12,12 +12,14 @@ import {
 	CardBody,
 	CardFooter,
 	CardHeader,
+	Tooltip as ChakraTooltip,
 	Flex,
 	Heading,
 	HStack,
 	SimpleGrid,
 	Slider,
 	SliderFilledTrack,
+	SliderMark,
 	SliderThumb,
 	SliderTrack,
 	Table,
@@ -27,7 +29,6 @@ import {
 	Text,
 	Th,
 	Thead,
-	Tooltip as ChakraTooltip,
 	Tr,
 	VStack,
 } from "@chakra-ui/react";
@@ -45,15 +46,39 @@ import {
 import {
 	calculateScenario,
 	ChartContainer,
-	ChartData,
-	FinancialParams,
-	FormNumberInput,
+	type ChartData,
+	type FinancialParams,
 	formatCurrency,
 	formatLargeCurrency,
+	FormNumberInput,
 	prepareChartData,
-	ScenarioRow,
+	type ScenarioRow,
 	updateFinancialParam,
 } from "../utils";
+
+const computeMonthlyFromPIA = (
+	pia: number,
+	claimAge: number,
+	fraAge: number,
+): number => {
+	const minAge = 62;
+	const maxAge = 70;
+	const clamped = Math.min(maxAge, Math.max(minAge, claimAge));
+	const monthsDiff = Math.round((clamped - fraAge) * 12); // positive if after FRA
+	let factor = 1;
+	if (monthsDiff < 0) {
+		const earlyMonths = Math.abs(monthsDiff);
+		const first36 = Math.min(36, earlyMonths);
+		const additional = Math.max(0, earlyMonths - 36);
+		const reductionPct =
+			first36 * (5 / 9) * 0.01 + additional * (5 / 12) * 0.01; // convert to decimal
+		factor = 1 - reductionPct;
+	} else if (monthsDiff > 0) {
+		const delayedCreditPct = monthsDiff * (2 / 3) * 0.01; // 2/3 of 1% per month
+		factor = 1 + delayedCreditPct;
+	}
+	return Math.max(0, Math.round(pia * factor));
+};
 // ======== Component: MoneyInputCard ========
 interface MoneyInputCardProps {
 	initialBalance: number;
@@ -317,55 +342,8 @@ const BalanceProjectionCard: React.FC<BalanceProjectionCardProps> = ({
 										position: "insideLeft",
 									}}
 								/>
-								<Tooltip
-									content={({ active, payload, label }) => {
-										if (active && payload && payload.length) {
-											const tooltipStyles = {
-												backgroundColor: "#FFFFFF",
-												border: "1px solid #E2E8F0",
-												color: "#1A202C",
-												padding: "10px",
-												borderRadius: "4px",
-												boxShadow:
-													"0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)",
-											} as React.CSSProperties;
-
-											return (
-												<div style={tooltipStyles}>
-													<p
-														style={{ fontWeight: "bold", marginBottom: "5px" }}
-													>
-														Year: {label}
-													</p>
-													{payload.map((entry, index) => (
-														<p
-															key={index}
-															style={{ color: entry.color, margin: "2px 0" }}
-														>
-															<span style={{ fontWeight: 600 }}>
-																{entry.name}:
-															</span>{" "}
-															{formatCurrency(entry.value as number)}
-														</p>
-													))}
-													<p
-														style={{
-															fontSize: "0.8em",
-															marginTop: "5px",
-															opacity: 0.8,
-														}}
-													>
-														{payload[0]?.value > 0
-															? "Retirement savings balance at year end"
-															: "Retirement savings depleted"}
-													</p>
-												</div>
-											);
-										}
-
-										return null;
-									}}
-								/>
+								{/* <Tooltip content={TooltipContent} /> */}
+								<Tooltip />
 								<Legend />
 								<Line
 									dataKey="Balance"
@@ -430,8 +408,8 @@ const DetailedProjectionCard: React.FC<DetailedProjectionCardProps> = ({
 						</Tr>
 					</Thead>
 					<Tbody>
-						{scenarioData.slice(0, 30).map((row, index) => (
-							<Tr key={index}>
+						{scenarioData.slice(0, 30).map((row) => (
+							<Tr key={row.year}>
 								<Td isNumeric>{row.year}</Td>
 								<Td isNumeric>{formatCurrency(row.ssMonthly)}</Td>
 								<Td isNumeric>{formatCurrency(row.requiredFrom401kMonthly)}</Td>
@@ -441,7 +419,7 @@ const DetailedProjectionCard: React.FC<DetailedProjectionCardProps> = ({
 								<Td isNumeric>{formatCurrency(row.endingBalanceReal)}</Td>
 								<Td isNumeric>
 									<ChakraTooltip
-										label={`This withdrawal rate (${row.withdrawalRate}%) is ${parseFloat(row.withdrawalRate) <= 4 ? "within" : "higher than"} the recommended 4% safe withdrawal rate.`}
+										label={`This withdrawal rate (${row.withdrawalRate}%) is ${parseFloat(row.withdrawalRate) <= 4 ? "within" : "above"} the recommended 4% safe withdrawal rate.`}
 										placement="top"
 									>
 										<Box
@@ -453,11 +431,6 @@ const DetailedProjectionCard: React.FC<DetailedProjectionCardProps> = ({
 											}}
 										>
 											{row.withdrawalRate}%
-											{parseFloat(row.withdrawalRate) > 4 && (
-												<Box as="span" color="orange.500" ml={1} fontSize="sm">
-													⚠️
-												</Box>
-											)}
 										</Box>
 									</ChakraTooltip>
 								</Td>
@@ -513,10 +486,10 @@ const EconomyInputCard: React.FC<EconomyInputCardProps> = ({
 				</Text>
 				<Text fontSize="sm" color="gray.600">
 					The 20-year rate of inflation is 2.4%, while Social Security
-					cost-of-living adjustment (COLA) is 2.3%. The S&P500 yields 10.3% in
-					the same period, while bond yields are in the 4.3-4.7% range. Common
-					guidance is a 60/40 stocks/bonds mix, which puts the 20-year return at
-					8%.
+					cost-of-living adjustment (COLA) is 2.3%. The S&amp;P500 yields 10.3%
+					in the same period, while bond yields are in the 4.3-4.7% range.
+					Common guidance is a 60/40 stocks/bonds mix, which puts the 20-year
+					return at 8%.
 				</Text>
 			</CardHeader>
 
@@ -557,83 +530,14 @@ const EconomyInputCard: React.FC<EconomyInputCardProps> = ({
 	);
 };
 
-// ======== Component: SocialSecurityInputCard ========
-interface SocialSecurityInputCardProps {
-	ssMonthlyAt62: number;
-	ssMonthlyAtFRA: number;
-	ssMonthlyAt70: number;
-	onChangeSsMonthlyAt62: (valueAsString: string, valueAsNumber: number) => void;
-	onChangeSsMonthlyAtFRA: (
-		valueAsString: string,
-		valueAsNumber: number,
-	) => void;
-	onChangeSsMonthlyAt70: (valueAsString: string, valueAsNumber: number) => void;
-}
-
-const SocialSecurityInputCard: React.FC<SocialSecurityInputCardProps> = ({
-	ssMonthlyAt62,
-	ssMonthlyAtFRA,
-	ssMonthlyAt70,
-	onChangeSsMonthlyAt62,
-	onChangeSsMonthlyAtFRA,
-	onChangeSsMonthlyAt70,
-}) => {
-	return (
-		<Card
-			bgColor="pink.50"
-			boxShadow="lg"
-			borderColor="pink.100"
-			borderWidth="1px"
-		>
-			<CardHeader>
-				<Heading size={"lg"}>Social Security</Heading>
-				<Text>Adjust the current Social Security limits as necessary.</Text>
-				<br />
-				<Alert status="info">
-					<AlertIcon />
-					Try setting, say, the FRA number to your specific Social Security
-					payment amount. Then look at the FRA line in the graph, and switch the
-					table view to FRA too. That will tailor all calculations specific to
-					you.
-				</Alert>
-			</CardHeader>
-
-			<CardBody>
-				<SimpleGrid columns={3} spacing={10}>
-					<FormNumberInput
-						value={ssMonthlyAt62}
-						onChange={onChangeSsMonthlyAt62}
-						placeholder="SS benefit at age 62..."
-						helperText="Age 62"
-					/>
-					<FormNumberInput
-						value={ssMonthlyAtFRA}
-						onChange={onChangeSsMonthlyAtFRA}
-						placeholder="SS benefit at FRA..."
-						helperText="Full Retirement Age"
-					/>
-					<FormNumberInput
-						value={ssMonthlyAt70}
-						onChange={onChangeSsMonthlyAt70}
-						placeholder="SS benefit at age 70..."
-						helperText="Age 70"
-					/>
-				</SimpleGrid>
-			</CardBody>
-		</Card>
-	);
-};
-
 interface SocialSecurityTimingCardProps {
 	initialPIAMonthly: number; // Monthly benefit at FRA (PIA) for initialization only
-	currentMonthlySS: number; // currently used expected monthly benefit in the plan
 	colaAdjustment: number;
 	onUpdateMonthlySS: (newMonthly: number) => void; // updates financialParams.socialSecurity
 }
 
 const SocialSecurityTimingCard: React.FC<SocialSecurityTimingCardProps> = ({
 	initialPIAMonthly,
-	currentMonthlySS,
 	colaAdjustment,
 	onUpdateMonthlySS,
 }) => {
@@ -642,6 +546,8 @@ const SocialSecurityTimingCard: React.FC<SocialSecurityTimingCardProps> = ({
 	const [birthYear, setBirthYear] = useState<number>(1960);
 	const [piaMonthly, setPiaMonthly] = useState<number>(initialPIAMonthly);
 	const [claimingAge, setClaimingAge] = useState<number>(67); // default around FRA for modern cohorts
+	const [isClaimingAgeDragging, setIsClaimingAgeDragging] =
+		useState<boolean>(false);
 
 	// Compute FRA based on birth year
 	const getFRA = (
@@ -686,30 +592,6 @@ const SocialSecurityTimingCard: React.FC<SocialSecurityTimingCardProps> = ({
 	const fra = getFRA(birthYear);
 
 	// Compute adjusted monthly based on claiming age vs FRA
-	const computeMonthlyFromPIA = (
-		pia: number,
-		claimAge: number,
-		fraAge: number,
-	): number => {
-		const minAge = 62;
-		const maxAge = 70;
-		const clamped = Math.min(maxAge, Math.max(minAge, claimAge));
-		const monthsDiff = Math.round((clamped - fraAge) * 12); // positive if after FRA
-		let factor = 1;
-		if (monthsDiff < 0) {
-			const earlyMonths = Math.abs(monthsDiff);
-			const first36 = Math.min(36, earlyMonths);
-			const additional = Math.max(0, earlyMonths - 36);
-			const reductionPct =
-				first36 * (5 / 9) * 0.01 + additional * (5 / 12) * 0.01; // convert to decimal
-			factor = 1 - reductionPct;
-		} else if (monthsDiff > 0) {
-			const delayedCreditPct = monthsDiff * (2 / 3) * 0.01; // 2/3 of 1% per month
-			factor = 1 + delayedCreditPct;
-		}
-		return Math.max(0, Math.round(pia * factor));
-	};
-
 	const selectedMonthly = computeMonthlyFromPIA(
 		piaMonthly,
 		claimingAge,
@@ -736,6 +618,22 @@ const SocialSecurityTimingCard: React.FC<SocialSecurityTimingCardProps> = ({
 	}, []);
 
 	const formattedClaimingAge = formatAgeLabel(claimingAge);
+
+	const sliderMin = 62;
+	const sliderMax = 70;
+	const sliderStep = 0.5;
+
+	const sliderMarks = React.useMemo(() => {
+		const steps = Math.round((sliderMax - sliderMin) / sliderStep);
+		return Array.from({ length: steps + 1 }, (_, index) => {
+			const age = sliderMin + index * sliderStep;
+			return {
+				value: parseFloat(age.toFixed(1)),
+				label: formatAgeLabel(age),
+				monthly: computeMonthlyFromPIA(piaMonthly, age, fra.age),
+			};
+		});
+	}, [formatAgeLabel, fra.age, piaMonthly]);
 
 	type ClaimOption = {
 		key: string;
@@ -833,8 +731,9 @@ const SocialSecurityTimingCard: React.FC<SocialSecurityTimingCardProps> = ({
 			<CardHeader>
 				<Heading size="lg">Social Security Timing</Heading>
 				<Text>
-					Explore how claiming age changes your PIA-based benefit. Use the
-					slider to set your expected monthly benefit for the plan.
+					Primary Insurance Amount (PIA) is the monthly benefit you would
+					receive at Full Retirement Age (FRA). Use the slider to set your
+					expected monthly benefit for the plan.
 				</Text>
 			</CardHeader>
 			<CardBody>
@@ -866,29 +765,51 @@ const SocialSecurityTimingCard: React.FC<SocialSecurityTimingCardProps> = ({
 							{formattedClaimingAge}
 						</Text>
 					</HStack>
-					<Slider
-						aria-label="Claiming age"
-						min={62}
-						max={70}
-						step={0.5}
-						value={claimingAge}
-						onChange={(value) => setClaimingAge(value)}
-					>
-						<SliderTrack>
-							<SliderFilledTrack />
-						</SliderTrack>
-						<SliderThumb boxSize={5} />
-					</Slider>
-					<HStack
-						justifyContent="space-between"
-						fontSize="xs"
-						color="gray.500"
-						mt={2}
-					>
-						<Text>62</Text>
-						<Text>{fra.label}</Text>
-						<Text>70</Text>
-					</HStack>
+					<Box position="relative" pb={12} px={1}>
+						<Slider
+							aria-label="Claiming age"
+							min={sliderMin}
+							max={sliderMax}
+							step={sliderStep}
+							value={claimingAge}
+							onChange={(value) => setClaimingAge(value)}
+							onChangeStart={() => setIsClaimingAgeDragging(true)}
+							onChangeEnd={() => setIsClaimingAgeDragging(false)}
+						>
+							<SliderTrack>
+								<SliderFilledTrack />
+							</SliderTrack>
+							{sliderMarks.map((mark) => (
+								<React.Fragment key={`mark-${mark.value}`}>
+									<SliderMark
+										value={mark.value}
+										mt="1"
+										transform="translateX(-50%)"
+									>
+										<Box w="1px" h="8px" bg="purple.300" />
+									</SliderMark>
+									<SliderMark
+										value={mark.value}
+										mt="9"
+										transform="translateX(-50%)"
+									>
+										<VStack spacing={0} fontSize="xs" color="gray.600">
+											<Text fontWeight="medium">{mark.label}</Text>
+											<Text fontSize="2xs">{formatCurrency(mark.monthly)}</Text>
+										</VStack>
+									</SliderMark>
+								</React.Fragment>
+							))}
+							<ChakraTooltip
+								hasArrow
+								placement="top"
+								label={`${formattedClaimingAge} • ${formatCurrency(selectedMonthly)}`}
+								isOpen={isClaimingAgeDragging ? true : undefined}
+							>
+								<SliderThumb boxSize={5} />
+							</ChakraTooltip>
+						</Slider>
+					</Box>
 				</Box>
 
 				<SimpleGrid columns={{ base: 1, md: 3 }} spacing={6} mt={6}>
@@ -1244,7 +1165,7 @@ const RetirementCalculator = (): JSX.Element => {
 
 			<SocialSecurityTimingCard
 				initialPIAMonthly={financialParams.socialSecurity}
-				currentMonthlySS={financialParams.socialSecurity}
+				// currentMonthlySS={financialParams.socialSecurity}
 				colaAdjustment={financialParams.colaAdjustment}
 				onUpdateMonthlySS={(newMonthly) =>
 					handleUpdateParam("socialSecurity", newMonthly)

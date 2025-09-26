@@ -8,6 +8,7 @@ import {
 import type { HeadFC, PageProps } from "gatsby";
 import { Link } from "gatsby";
 import type { FC } from "react";
+import React from "react";
 
 const NotFoundPage: FC<PageProps> = () => {
 	return (
@@ -30,4 +31,4 @@ const NotFoundPage: FC<PageProps> = () => {
 
 export default NotFoundPage;
 
-export const Head: HeadFC = () => <title>Not found</title>;
+export const Head: HeadFC = () => <title>Retire Guru | Not found</title>;

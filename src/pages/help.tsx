@@ -911,5 +911,5 @@ const HelpPage: React.FC<PageProps> = () => {
 export default HelpPage;
 
 export const Head: HeadFC = () => (
-	<title>Help | Retirement Calculator Guide | Retire.Guru</title>
+	<title>Retire Guru | Retirement Calculator Help</title>
 );

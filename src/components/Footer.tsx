@@ -6,53 +6,9 @@ import {
 	SimpleGrid,
 	Stack,
 	Text,
-	VisuallyHidden,
-	chakra,
 } from "@chakra-ui/react";
 import { Link as GatsbyLink } from "gatsby";
 import React from "react";
-import { FaFacebook, FaLinkedin, FaTwitter } from "react-icons/fa";
-
-const SocialButton = ({
-	children,
-	label,
-	href,
-}: {
-	children: React.ReactNode;
-	label: string;
-	href: string;
-}) => {
-	return (
-		<chakra.button
-			bg="neutral.100"
-			rounded={"full"}
-			w={8}
-			h={8}
-			cursor={"pointer"}
-			as={"a"}
-			href={href}
-			display={"inline-flex"}
-			alignItems={"center"}
-			justifyContent={"center"}
-			transition={"background 0.3s ease"}
-			_hover={{
-				bg: "primary.500",
-				color: "white",
-			}}
-		>
-			<VisuallyHidden>{label}</VisuallyHidden>
-			{children}
-		</chakra.button>
-	);
-};
-
-const ListHeader = ({ children }: { children: React.ReactNode }) => {
-	return (
-		<Text fontWeight={"600"} fontSize={"lg"} mb={2}>
-			{children}
-		</Text>
-	);
-};
 
 const Footer = () => {
 	return (

@@ -4,13 +4,12 @@ const config: GatsbyConfig = {
 	siteMetadata: {
 		title: `Retire.Guru`,
 		description: `Tools and resources to help you plan for retirement with confidence`,
-		author: `@retire.guru`,
+		author: `Stephen Harrison <stephen@harrison.org>`,
 		siteUrl: `https://retire.guru`,
 	},
 	// pathPrefix: "/retire.guru",
 	graphqlTypegen: true,
 	plugins: [
-		"gatsby-plugin-react-helmet",
 		"gatsby-plugin-sitemap",
 		"gatsby-plugin-robots-txt",
 		"gatsby-plugin-catch-links",

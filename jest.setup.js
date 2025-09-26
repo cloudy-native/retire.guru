@@ -19,14 +19,14 @@ Object.defineProperty(window, "matchMedia", {
 
 // Mock Intl.NumberFormat to have consistent behavior in tests
 global.Intl = {
-	NumberFormat: jest.fn().mockImplementation((locale, options) => ({
+	NumberFormat: jest.fn().mockImplementation((_locale, options) => ({
 		format: (value) => {
 			// Simplified mock implementation for testing
 			if (options?.style === "currency" && options?.currency === "USD") {
 				const maximumFractionDigits = options?.maximumFractionDigits || 0;
 				const val =
-					Math.round(value * Math.pow(10, maximumFractionDigits)) /
-					Math.pow(10, maximumFractionDigits);
+					Math.round(value * 10 ** maximumFractionDigits) /
+					10 ** maximumFractionDigits;
 
 				if (val < 0) {
 					return `-$${Math.abs(val).toLocaleString("en-US", {

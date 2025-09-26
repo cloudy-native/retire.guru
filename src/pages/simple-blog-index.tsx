@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, graphql } from "gatsby";
+import { HeadFC, Link, graphql } from "gatsby";
 import {
 	Box,
 	Container,
@@ -77,3 +77,5 @@ export const pageQuery = graphql`
     }
   }
 `;
+
+export const Head: HeadFC = () => <title>Retire Guru | Blog</title>;

@@ -227,7 +227,7 @@ const BlogPage: React.FC<
 
 export default BlogPage;
 
-export const Head: HeadFC = () => <title>Blog | Retire.Guru</title>;
+export const Head: HeadFC = () => <title>Retire Guru | Blog</title>;
 
 export const pageQuery = graphql`
   query BlogIndexQuery {
